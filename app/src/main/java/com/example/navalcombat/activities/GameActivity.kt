@@ -1,4 +1,4 @@
-package com.example.navalcombat.activities // Замените на ваш пакет
+package com.example.navalcombat.activities // Убедитесь, что пакет ваш
 
 import android.graphics.Color
 import android.os.Bundle
@@ -6,102 +6,94 @@ import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.navalcombat.R // Убедитесь, что R импортирован
+import androidx.gridlayout.widget.GridLayout // <<< ИЗМЕНЕНО
+import com.example.navalcombat.R
 import java.util.*
-import kotlin.collections.ArrayList
-import kotlin.random.Random // Для случайных чисел Kotlin
+import kotlin.random.Random
 
-// Состояния ячейки
+// Состояния ячейки (остается без изменений)
 enum class CellState {
-    EMPTY, // Пусто
-    SHIP,  // Корабль (не виден противнику)
-    HIT,   // Попадание
-    MISS,  // Промах
-    SUNK   // Потоплен (можно добавить для визуала, пока не используется)
+    EMPTY, SHIP, HIT, MISS, SUNK
 }
 
 class GameActivity : AppCompatActivity() {
 
     private lateinit var statusTextView: TextView
-    private lateinit var opponentGridView: RecyclerView
-    private lateinit var playerGridView: RecyclerView
+    // --- ИЗМЕНЕНО: Тип переменных для Grid ---
+    private lateinit var opponentGridView: GridLayout
+    private lateinit var playerGridView: GridLayout
+    // ---
 
-    private lateinit var opponentAdapter: GridAdapter
-    private lateinit var playerAdapter: GridAdapter
+    // --- ДОБАВЛЕНО: Хранение ссылок на View ячеек ---
+    private var opponentCellViews: Array<Array<TextView?>> = Array(gridSize) { arrayOfNulls<TextView>(gridSize) }
+    private var playerCellViews: Array<Array<TextView?>> = Array(gridSize) { arrayOfNulls<TextView>(gridSize) }
+    // ---
+
+    // --- УДАЛЕНО: Переменные для адаптеров ---
+    // private lateinit var opponentAdapter: GridAdapter
+    // private lateinit var playerAdapter: GridAdapter
+    // ---
 
     // Размеры поля
     private val gridSize = 10
 
-    // Игровые поля (массив массивов с состояниями)
+    // Игровые поля (остается без изменений)
     private var playerBoard = createEmptyBoard()
-    private var opponentBoard = createEmptyBoard() // Компьютер тоже использует CellState
+    private var opponentBoard = createEmptyBoard()
 
-    // Счетчик оставшихся "палуб" кораблей для определения победы
-    // Стандартный флот: 1x4, 2x3, 3x2, 4x1 = 20 палуб
+    // Счетчик оставшихся "палуб" (остается без изменений)
     private var playerShipsCells = 20
     private var opponentShipCells = 20
 
-    // Состояние игры
+    // Состояние игры (остается без изменений)
     private var isPlayerTurn = true
     private var isGameOver = false
 
-    // Размеры кораблей для расстановки
+    // Размеры кораблей (остается без изменений)
     private val shipSizes = listOf(4, 3, 3, 2, 2, 2, 1, 1, 1, 1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game)
+        setContentView(R.layout.activity_game) // Убедитесь, что используется макет с GridLayout
 
         statusTextView = findViewById(R.id.textViewGameStatus)
+        // --- ИЗМЕНЕНО: findViewById для GridLayout ---
         opponentGridView = findViewById(R.id.opponentGrid)
         playerGridView = findViewById(R.id.playerGrid)
+        // ---
 
-        setupGame()
-        setupAdapters()
+        setupGame() // Расстановка кораблей на логических досках
+
+        // --- ИЗМЕНЕНО: Создание ячеек вместо настройки адаптеров ---
+        createGridCells(opponentGridView, opponentBoard, true) // true - это поле противника
+        createGridCells(playerGridView, playerBoard, false) // false - это поле игрока
+        // ---
+
         updateStatusText()
     }
 
-    // --- Настройка игры ---
-
+    // --- Настройка игры (createEmptyBoard, setupGame, placeShipsRandomly, canPlaceShip, placeShip) ---
+    // Эти методы остаются БЕЗ ИЗМЕНЕНИЙ, т.к. они работают с логической моделью доски (Array<Array<CellState>>)
     private fun createEmptyBoard(): Array<Array<CellState>> {
         return Array(gridSize) { Array(gridSize) { CellState.EMPTY } }
     }
 
     private fun setupGame() {
-        // Сброс состояний
         playerBoard = createEmptyBoard()
         opponentBoard = createEmptyBoard()
-        playerShipsCells = shipSizes.sum() // Сумма длин кораблей
+        playerShipsCells = shipSizes.sum()
         opponentShipCells = shipSizes.sum()
         isPlayerTurn = true
         isGameOver = false
-
-        // Расстановка кораблей (пока случайная для обоих)
         placeShipsRandomly(playerBoard)
         placeShipsRandomly(opponentBoard)
+        // Очищаем ссылки на старые View, если игра перезапускается
+        opponentCellViews = Array(gridSize) { arrayOfNulls<TextView>(gridSize) }
+        playerCellViews = Array(gridSize) { arrayOfNulls<TextView>(gridSize) }
     }
-
-    private fun setupAdapters() {
-        // Адаптер для поля противника (передаем данные и обработчик клика)
-        opponentAdapter = GridAdapter(opponentBoard, true) { row, col ->
-            handlePlayerShot(row, col)
-        }
-        opponentGridView.layoutManager = GridLayoutManager(this, gridSize)
-        opponentGridView.adapter = opponentAdapter
-
-        // Адаптер для поля игрока (без обработчика клика)
-        playerAdapter = GridAdapter(playerBoard, false, null)
-        playerGridView.layoutManager = GridLayoutManager(this, gridSize)
-        playerGridView.adapter = playerAdapter
-    }
-
-    // --- Логика расстановки кораблей (упрощенная) ---
 
     private fun placeShipsRandomly(board: Array<Array<CellState>>) {
         for (size in shipSizes) {
@@ -110,7 +102,6 @@ class GameActivity : AppCompatActivity() {
                 val row = Random.nextInt(gridSize)
                 val col = Random.nextInt(gridSize)
                 val isHorizontal = Random.nextBoolean()
-
                 if (canPlaceShip(board, row, col, size, isHorizontal)) {
                     placeShip(board, row, col, size, isHorizontal)
                     placed = true
@@ -119,23 +110,15 @@ class GameActivity : AppCompatActivity() {
         }
     }
 
-    // Проверяет, можно ли разместить корабль (в пределах поля и без наложения)
     private fun canPlaceShip(board: Array<Array<CellState>>, row: Int, col: Int, size: Int, isHorizontal: Boolean): Boolean {
         for (i in 0 until size) {
             val currentRow = if (isHorizontal) row else row + i
             val currentCol = if (isHorizontal) col + i else col
-
-            // 1. Проверка выхода за границы
-            if (currentRow >= gridSize || currentCol >= gridSize) {
-                return false
-            }
-            // 2. Проверка наложения на другие корабли (и соседние клетки, упрощенно)
+            if (currentRow >= gridSize || currentCol >= gridSize) return false
             for (r in (currentRow - 1)..(currentRow + 1)) {
                 for (c in (currentCol - 1)..(currentCol + 1)) {
                     if (r in 0 until gridSize && c in 0 until gridSize) {
-                        if (board[r][c] == CellState.SHIP) {
-                            return false // Занято или слишком близко
-                        }
+                        if (board[r][c] == CellState.SHIP) return false
                     }
                 }
             }
@@ -143,7 +126,6 @@ class GameActivity : AppCompatActivity() {
         return true
     }
 
-    // Размещает корабль на поле
     private fun placeShip(board: Array<Array<CellState>>, row: Int, col: Int, size: Int, isHorizontal: Boolean) {
         for (i in 0 until size) {
             val currentRow = if (isHorizontal) row else row + i
@@ -151,39 +133,121 @@ class GameActivity : AppCompatActivity() {
             board[currentRow][currentCol] = CellState.SHIP
         }
     }
+    // --- Конец неизмененных методов настройки ---
 
-    // --- Логика ходов ---
+
+    // --- УДАЛЕНО: Метод setupAdapters() ---
+
+
+    // --- ДОБАВЛЕНО: Метод для создания и добавления ячеек в GridLayout ---
+    private fun createGridCells(grid: GridLayout, board: Array<Array<CellState>>, isOpponent: Boolean) {
+        grid.removeAllViews() // Очищаем предыдущие View, если были
+        val cellReferences = if (isOpponent) opponentCellViews else playerCellViews
+
+        for (row in 0 until gridSize) {
+            for (col in 0 until gridSize) {
+                val cellView = LayoutInflater.from(this).inflate(R.layout.grid_cell, grid, false) as TextView
+
+                val params = GridLayout.LayoutParams()
+                params.width = 0
+                params.height = 0
+                // Важно: используем веса, чтобы ячейки заняли все пространство грида
+                params.rowSpec = GridLayout.spec(row, 1, 1f)
+                params.columnSpec = GridLayout.spec(col, 1, 1f)
+                params.setMargins(1, 1, 1, 1) // Маленькие отступы для линий сетки
+                cellView.layoutParams = params
+
+                cellReferences[row][col] = cellView // Сохраняем ссылку
+
+                updateCellView(cellView, board[row][col], isOpponent) // Устанавливаем начальный вид
+
+                if (isOpponent) { // Клик только на поле противника
+                    cellView.setOnClickListener {
+                        if (!isGameOver && isPlayerTurn) { // Проверяем ход и конец игры
+                            handlePlayerShot(row, col)
+                        }
+                    }
+                } else {
+                    cellView.isClickable = false // Явно делаем некликабельным поле игрока
+                }
+
+                grid.addView(cellView) // Добавляем ячейку в GridLayout
+            }
+        }
+    }
+    // ---
+
+
+    // --- ДОБАВЛЕНО: Метод для обновления вида одной ячейки ---
+    private fun updateCellView(cellView: TextView?, state: CellState, isOpponent: Boolean) {
+        cellView ?: return // Если View нет, выходим
+
+        // Сброс
+        cellView.text = ""
+        // Можно убрать setBackgroundResource, если отступы создают сетку
+        // cellView.setBackgroundResource(R.drawable.cell_border)
+        cellView.setBackgroundColor(ContextCompat.getColor(this, android.R.color.transparent))
+
+        when (state) {
+            CellState.EMPTY -> {
+                cellView.setBackgroundColor(ContextCompat.getColor(this, R.color.design_default_color_primary_variant)) // Синий фон
+            }
+            CellState.SHIP -> {
+                if (!isOpponent) { // Свои корабли
+                    cellView.setBackgroundColor(Color.GRAY)
+                } else { // Корабли противника не видны
+                    cellView.setBackgroundColor(ContextCompat.getColor(this, R.color.design_default_color_primary_variant)) // Синий фон
+                }
+            }
+            CellState.HIT -> {
+                cellView.text = "X"
+                cellView.setBackgroundColor(Color.RED)
+                cellView.setTextColor(Color.WHITE)
+            }
+            CellState.MISS -> {
+                cellView.text = "•"
+                cellView.setBackgroundColor(Color.LTGRAY)
+                cellView.setTextColor(Color.DKGRAY)
+            }
+            CellState.SUNK -> {
+                cellView.text = "X"
+                cellView.setBackgroundColor(Color.BLACK)
+                cellView.setTextColor(Color.RED)
+            }
+        }
+    }
+    // ---
+
+
+    // --- Логика ходов (ИЗМЕНЕНЫ вызовы обновления UI) ---
 
     private fun handlePlayerShot(row: Int, col: Int) {
-        if (!isPlayerTurn || isGameOver) return // Не ход игрока или игра закончена
+        if (!isPlayerTurn || isGameOver) return
 
+        val currentCellView = opponentCellViews[row][col] // Получаем View ячейки
         val cellState = opponentBoard[row][col]
 
-        // Не стрелять в уже обстрелянные клетки
         if (cellState == CellState.HIT || cellState == CellState.MISS) {
             statusTextView.text = "Сюда уже стреляли!"
             return
         }
 
         if (cellState == CellState.SHIP) {
-            // Попадание
             opponentBoard[row][col] = CellState.HIT
             opponentShipCells--
             statusTextView.text = "Попадание!"
-            opponentAdapter.notifyItemChanged(row * gridSize + col)
+            updateCellView(currentCellView, CellState.HIT, true) // Обновляем View
             checkGameOver()
-            // Игрок ходит снова (isPlayerTurn остается true)
-
-        } else {
-            // Промах
+            // Игрок ходит снова, isPlayerTurn = true
+        } else { // Промах
             opponentBoard[row][col] = CellState.MISS
             statusTextView.text = "Промах!"
-            opponentAdapter.notifyItemChanged(row * gridSize + col)
+            updateCellView(currentCellView, CellState.MISS, true) // Обновляем View
             isPlayerTurn = false
-            // Запускаем ход компьютера с небольшой задержкой
-            Handler(Looper.getMainLooper()).postDelayed({ computerTurn() }, 1000) // 1 секунда
+            Handler(Looper.getMainLooper()).postDelayed({ computerTurn() }, 1000)
         }
-        updateStatusText() // Обновить текст статуса (чей ход)
+        // Обновляем статус только если не было попадания (т.к. игрок ходит снова)
+        if (!isPlayerTurn) updateStatusText()
     }
 
     private fun computerTurn() {
@@ -193,153 +257,62 @@ class GameActivity : AppCompatActivity() {
 
         var row: Int
         var col: Int
-        var isValidShot = false
-
-        // ИИ компьютера: простой случайный выстрел в нестреляную клетку
+        var isValidShot: Boolean
+        // Простой случайный выбор незатронутой клетки
         do {
             row = Random.nextInt(gridSize)
             col = Random.nextInt(gridSize)
-            val cellState = playerBoard[row][col]
-            if (cellState != CellState.HIT && cellState != CellState.MISS) {
-                isValidShot = true
-            }
+            val state = playerBoard[row][col]
+            isValidShot = state != CellState.HIT && state != CellState.MISS
         } while (!isValidShot)
 
         val targetState = playerBoard[row][col]
+        val targetCellView = playerCellViews[row][col] // Получаем View ячейки игрока
 
-        // Добавляем задержку перед отображением результата хода компьютера
+        // Задержка для имитации "раздумий" и отображения
         Handler(Looper.getMainLooper()).postDelayed({
-            if (targetState == CellState.SHIP) {
-                // Попадание компьютера
+            if (targetState == CellState.SHIP) { // Попадание компьютера
                 playerBoard[row][col] = CellState.HIT
                 playerShipsCells--
                 statusTextView.text = "Компьютер попал!"
-                playerAdapter.notifyItemChanged(row * gridSize + col)
+                updateCellView(targetCellView, CellState.HIT, false) // Обновляем View
                 checkGameOver()
                 if (!isGameOver) {
-                    // Компьютер ходит снова (после небольшой задержки)
+                    // Компьютер ходит снова
                     Handler(Looper.getMainLooper()).postDelayed({ computerTurn() }, 1000)
                 }
-
-            } else {
-                // Промах компьютера
+            } else { // Промах компьютера
                 playerBoard[row][col] = CellState.MISS
                 statusTextView.text = "Компьютер промахнулся!"
-                playerAdapter.notifyItemChanged(row * gridSize + col)
-                isPlayerTurn = true // Переход хода игроку
-                updateStatusText()
+                updateCellView(targetCellView, CellState.MISS, false) // Обновляем View
+                isPlayerTurn = true
+                updateStatusText() // Переход хода к игроку
             }
-        }, 1000) // 1 секунда задержки для отображения выстрела
+        }, 1000)
     }
+    // --- Конец логики ходов ---
 
-    // --- Проверка конца игры и статус ---
 
+    // --- Проверка конца игры и статус (остаются без изменений) ---
     private fun checkGameOver() {
         if (opponentShipCells <= 0) {
             statusTextView.text = "Вы победили!"
             isGameOver = true
-            // TODO: Сохранить результат игры (например, передать в MainActivity)
+            // TODO: Сохранить результат
         } else if (playerShipsCells <= 0) {
             statusTextView.text = "Компьютер победил!"
             isGameOver = true
-            // TODO: Сохранить результат игры
+            // TODO: Сохранить результат
         }
     }
 
     private fun updateStatusText() {
-        if (isGameOver) return // Сообщение о победе/поражении уже установлено
-
-        if (isPlayerTurn) {
-            // Если статус не "Попадание!", показываем "Ваш ход"
-            if (statusTextView.text != "Попадание!") {
-                statusTextView.text = "Ваш ход"
-            }
-        } else {
-            // Если статус не "Компьютер попал!", показываем "Ход компьютера..."
-            if (statusTextView.text != "Компьютер попал!") {
-                statusTextView.text = "Ход компьютера..."
-            }
-        }
+        if (isGameOver) return
+        statusTextView.text = if (isPlayerTurn) "Ваш ход" else "Ход компьютера..."
     }
+    // ---
 
-    // --- Адаптер для RecyclerView ---
-    inner class GridAdapter(
-        private val board: Array<Array<CellState>>,
-        private val isOpponentBoard: Boolean, // true - поле противника, false - поле игрока
-        private val onCellClick: ((row: Int, col: Int) -> Unit)? // Лямбда для клика
-    ) : RecyclerView.Adapter<GridAdapter.ViewHolder>() {
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val cellText: TextView = view.findViewById(R.id.cellTextView) // Находим TextView в grid_cell.xml
-        }
+    // --- УДАЛЕНО: Внутренний класс GridAdapter ---
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.grid_cell, parent, false) // Используем наш макет ячейки
-
-            // Устанавливаем размер ячейки, чтобы 10 поместились в ширину
-            val displayMetrics = parent.context.resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            val parentPadding = (parent as RecyclerView).paddingLeft + parent.paddingRight // Учитываем паддинг RecyclerView
-            val cellSize = (screenWidth - parentPadding) / gridSize
-            view.layoutParams.height = cellSize // Делаем ячейку квадратной
-
-            return ViewHolder(view)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val row = position / gridSize
-            val col = position % gridSize
-            val cellState = board[row][col]
-
-            // Сбрасываем текст и фон по умолчанию
-            holder.cellText.text = ""
-            holder.cellText.setBackgroundResource(R.drawable.cell_border) // Сброс на обычную рамку
-            holder.cellText.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, android.R.color.transparent)) // Прозрачный фон по умолчанию
-
-            // Настраиваем вид ячейки в зависимости от состояния и чье это поле
-            when (cellState) {
-                CellState.EMPTY -> {
-                    // Ничего не показываем (или фон воды)
-                    holder.cellText.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.design_default_color_primary_variant)) // Синий фон
-                }
-                CellState.SHIP -> {
-                    if (!isOpponentBoard) { // Показываем свои корабли
-                        holder.cellText.setBackgroundColor(Color.GRAY)
-                    } else {
-                        // Корабли противника не видны
-                        holder.cellText.setBackgroundColor(ContextCompat.getColor(holder.itemView.context, R.color.design_default_color_primary_variant)) // Синий фон
-                    }
-                }
-                CellState.HIT -> {
-                    holder.cellText.text = "X"
-                    holder.cellText.setBackgroundColor(Color.RED) // Попадание - красный фон
-                    holder.cellText.setTextColor(Color.WHITE)
-                }
-                CellState.MISS -> {
-                    holder.cellText.text = "•" // Точка для промаха
-                    holder.cellText.setBackgroundColor(Color.LTGRAY) // Промах - светло-серый
-                    holder.cellText.setTextColor(Color.DKGRAY)
-                }
-                CellState.SUNK -> { // Если решите использовать
-                    holder.cellText.text = "X"
-                    holder.cellText.setBackgroundColor(Color.BLACK)
-                    holder.cellText.setTextColor(Color.RED)
-                }
-            }
-
-            // Устанавливаем обработчик клика только для поля противника и если игра не закончена
-            if (isOpponentBoard && onCellClick != null) {
-                holder.itemView.setOnClickListener {
-                    if (!isGameOver && isPlayerTurn) { // Кликаем только в свой ход
-                        onCellClick.invoke(row, col)
-                    }
-                }
-            } else {
-                holder.itemView.setOnClickListener(null) // Убираем клик для поля игрока
-            }
-        }
-
-        override fun getItemCount(): Int = gridSize * gridSize // Всего 100 ячеек
-    }
 }

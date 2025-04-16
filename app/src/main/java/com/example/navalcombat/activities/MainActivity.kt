@@ -1,4 +1,4 @@
-package com.example.navalcombat.activities // Замените на ваш пакет
+package com.example.navalcombat.activities // Убедитесь, что пакет ваш
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -35,9 +35,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main) // Устанавливаем макет
+        // Убедитесь, что здесь указан ваш макет с ConstraintLayout
+        setContentView(R.layout.activity_main)
 
-        // Находим View по ID
+        // Находим View по ID (эти ID есть в макете с ConstraintLayout)
         winStreakTextView = findViewById(R.id.textViewWinStreak)
         newGameButton = findViewById(R.id.buttonNewGame)
         historyRecyclerView = findViewById(R.id.recyclerViewHistory)
@@ -51,7 +52,8 @@ class MainActivity : AppCompatActivity() {
 
         // Настройка кнопки "Новая Игра"
         newGameButton.setOnClickListener {
-            val intent = Intent(this, GameActivity::class.java) // Укажите вашу GameActivity
+            // Убедитесь, что GameActivity существует и правильно указана
+            val intent = Intent(this, GameActivity::class.java)
             startActivity(intent)
         }
     }
@@ -114,36 +116,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     // --- Простой адаптер для RecyclerView ---
-    // Его можно вынести в отдельный файл, но для простоты оставим здесь
+    // Убедитесь, что R.layout.simple_history_item существует и
+    // содержит TextView с ID R.id.historyItemText
     class SimpleHistoryAdapter(private val items: List<GameResult>) :
         RecyclerView.Adapter<SimpleHistoryAdapter.ViewHolder>() {
 
-        // Форматтер для даты/времени
         private val dateFormat = SimpleDateFormat("dd.MM HH:mm", Locale.getDefault())
 
-        // ViewHolder хранит ссылки на View внутри одного элемента списка
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            // Находим TextView внутри макета simple_history_item.xml
-            val historyText: TextView = view.findViewById(R.id.historyItemText) // Укажите правильный ID!
+            // Убедитесь, что этот ID есть в simple_history_item.xml
+            val historyText: TextView = view.findViewById(R.id.historyItemText)
         }
 
-        // Создает новый ViewHolder (вызывается RecyclerView)
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            // Загружаем макет для одного элемента списка
+            // Убедитесь, что simple_history_item - правильное имя вашего макета
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.simple_history_item, parent, false) // Укажите ваш макет!
+                .inflate(R.layout.simple_history_item, parent, false)
             return ViewHolder(view)
         }
 
-        // Заполняет ViewHolder данными для конкретной позиции (вызывается RecyclerView)
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val item = items[position] // Получаем данные для этой позиции
-            val dateStr = dateFormat.format(Date(item.timestamp)) // Форматируем время
-            // Устанавливаем текст в TextView
+            val item = items[position]
+            val dateStr = dateFormat.format(Date(item.timestamp))
             holder.historyText.text = "$dateStr - Победитель: ${item.winner}"
         }
 
-        // Возвращает общее количество элементов в списке (вызывается RecyclerView)
         override fun getItemCount(): Int {
             return items.size
         }
