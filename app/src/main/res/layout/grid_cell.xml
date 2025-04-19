@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/cellTextView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
-    android:textSize="14sp"
+    android:textSize="20sp"
     android:textStyle="bold"
-    android:background="@drawable/cell_border"
     android:textColor="@android:color/black"
     tools:text="X"
-    xmlns:tools="http://schemas.android.com/tools"/>
+    tools:background="@drawable/cell_water"/> <!-- Только для предпросмотра -->
