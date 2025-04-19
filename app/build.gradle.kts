@@ -53,4 +53,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.fragment:fragment-ktx:1.5.7")
+    implementation("androidx.gridlayout:gridlayout:1.0.0")
 }
