@@ -16,6 +16,9 @@
             android:name=".activities.GameActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.SetupActivity"
+            android:exported="false"/>
+        <activity
             android:name=".activities.MainActivity"
             android:exported="true">
             <intent-filter>

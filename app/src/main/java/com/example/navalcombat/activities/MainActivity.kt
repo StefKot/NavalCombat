@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         // Настройка кнопки "Новая Игра"
         newGameButton.setOnClickListener {
             // Убедитесь, что GameActivity существует и правильно указана
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, SetupActivity::class.java)
             startActivity(intent)
         }
     }

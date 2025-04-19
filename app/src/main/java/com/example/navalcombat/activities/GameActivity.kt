@@ -21,10 +21,8 @@ import com.example.navalcombat.R // Убедитесь, что пакет соо
 import java.util.*
 import kotlin.random.Random
 
-// Состояния ячейки
-enum class CellState {
-    EMPTY, SHIP, HIT, MISS, SUNK
-}
+import com.example.navalcombat.model.ShipToPlace // Импортируем ShipToPlace
+import com.example.navalcombat.model.CellState // Импортируем CellState
 
 class GameActivity : AppCompatActivity() {
 
