@@ -26,6 +26,14 @@ import androidx.gridlayout.widget.GridLayout
 import com.example.navalcombat.R
 import com.example.navalcombat.model.CellState
 import com.example.navalcombat.model.Ship
+// --- Добавляем импорты для Room и Coroutines ---
+import androidx.lifecycle.lifecycleScope // Используем lifecycleScope для запуска корутин
+import kotlinx.coroutines.launch // Для запуска корутин
+import com.example.navalcombat.data.AppDatabase // Используем AppDatabase из твоего кода
+import com.example.navalcombat.data.GameResultDao // Используем GameResultDao из твоего кода
+import com.example.navalcombat.data.GameResultEntity // Используем GameResultEntity из твоего кода
+// --- Конец импортов для Room и Coroutines ---
+
 import java.io.Serializable
 import java.util.Stack
 import kotlin.random.Random
@@ -42,8 +50,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var opponentRowLabelsLayout: LinearLayout
     private lateinit var playerColLabelsLayout: LinearLayout
     private lateinit var playerRowLabelsLayout: LinearLayout
-    // Кнопка Начать бой (найдена, но не используется в процессе игры)
-    private lateinit var buttonStartBattle: Button
+    private lateinit var buttonStartBattle: Button // Кнопка Начать бой (найдена, но не используется в процессе игры)
     // --- Конец UI элементов ---
 
     // --- Логическая модель данных и состояние игры ---
@@ -62,6 +69,10 @@ class GameActivity : AppCompatActivity() {
     private val gridSize = 10 // <-- Размер поля 10x10
 
     private val shipSizes = listOf(4, 3, 3, 2, 2, 2, 1, 1, 1, 1) // Стандартные размеры кораблей для расстановки
+
+    // --- Добавляем DAO для работы с базой данных ---
+    private lateinit var gameResultDao: GameResultDao
+    // --- Конец добавления DAO ---
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +100,13 @@ class GameActivity : AppCompatActivity() {
             view.updatePadding(top = systemBarsInsets.top, bottom = systemBarsInsets.bottom)
             insets
         }
+
+        // --- Инициализируем DAO ---
+        // Используем applicationContext, чтобы избежать утечек контекста Activity
+        gameResultDao = AppDatabase.getDatabase(applicationContext).gameResultDao()
+        Log.d("GameActivity", "onCreate: Room Database and DAO initialized.")
+        // --- Конец инициализации DAO ---
+
 
         // Инициализация массивов View ячеек
         Log.d("GameActivity", "onCreate: Initializing CellViews arrays with size $gridSize")
@@ -145,10 +163,8 @@ class GameActivity : AppCompatActivity() {
         // playerBoard и playerShips уже установлены в onCreate
 
         opponentBoard = createEmptyBoard() // Создаем пустую доску для противника
-        // --- ИСПРАВЛЕНО: Используем обновленный метод расстановки ---
         opponentShips = placeShipsRandomlyAndCreateObjects(opponentBoard) // Случайная расстановка и создание Ship
         Log.d("GameActivity", "setupGame: Opponent ships placed. Found ${opponentShips.size} ships.")
-        // --- Конец исправления ---
 
         isPlayerTurn = true // Игрок всегда начинает
         isGameOver = false
@@ -675,17 +691,14 @@ class GameActivity : AppCompatActivity() {
 
                     updateGridCells() // <-- Вызываем обновление UI ПОЛЯ ПРОТИВНИКА
 
-                    checkGameOver() // Might set isGameOver to true
+                    checkGameOver() // Might set isGameOver to true. This will also trigger saving the result if game ends.
 
                     if (!isGameOver) {
                         // Если игра не окончена и игрок попал/убил, ход игрока продолжается
                         Log.d("GameActivity", "handlePlayerShot: Player hit/sunk, turn continues.")
-                        // --- ИСПРАВЛЕНО: УДАЛЕН вызов updateStatusText() ЗДЕСЬ ---
-                        // updateStatusText() // <-- ЭТО БЫЛА ПРОБЛЕМА
-                        // --- Конец исправления ---
                         // Статус "Ранил!" или "Убил!" УЖЕ установлен выше и останется на экране до следующего действия
                     } else {
-                        // Игра окончена, checkGameOver обработал статус победы
+                        // Игра окончена, checkGameOver обработал статус победы и запустил сохранение
                         Log.d("GameActivity", "handlePlayerShot: Game is over after player's move.")
                     }
 
@@ -714,7 +727,6 @@ class GameActivity : AppCompatActivity() {
 
                 Handler(Looper.getMainLooper()).postDelayed({
                     showBoard(false) // <-- Переключаем на поле игрока (статус обновится на "Ход компьютера...")
-                    // updateStatusText() // Нет необходимости, showBoard уже вызывает
                     computerTurn() // Компьютер делает свой ход
                 }, 1000) // Задержка перед переключением и ходом компьютера (1 секунда)
             }
@@ -778,7 +790,7 @@ class GameActivity : AppCompatActivity() {
 
                     updateGridCells() // <-- Обновляем UI ПОЛЯ ИГРОКА
 
-                    checkGameOver() // Might set isGameOver to true
+                    checkGameOver() // Might set isGameOver to true. This will also trigger saving the result if game ends.
 
                     if (!isGameOver) {
                         // Если игра не окончена и компьютер попал/убил, его ход продолжается
@@ -788,7 +800,7 @@ class GameActivity : AppCompatActivity() {
                     } else {
                         Log.d("GameActivity", "computerTurn: Game is over after computer's move.")
                         // Игра окончена, остаемся на поле игрока с итоговым статусом
-                        // checkGameOver уже установил текст статуса
+                        // checkGameOver уже установил текст статуса и запустил сохранение
                     }
 
                 } else {
@@ -814,7 +826,6 @@ class GameActivity : AppCompatActivity() {
 
                 Handler(Looper.getMainLooper()).postDelayed({
                     showBoard(true) // <-- Переключаем на поле противника (статус обновится на "Ваш ход")
-                    // updateStatusText() // Нет необходимости, showBoard уже вызывает
                 }, 1000) // Задержка перед переключением обратно (1 секунда)
             }
             Log.d("GameActivity", "computerTurn: Delayed action finished.")
@@ -833,13 +844,13 @@ class GameActivity : AppCompatActivity() {
             statusTextView.text = "Поздравляем! Вы победили!"
             isGameOver = true
             Log.d("GameActivity", "checkGameOver: Player WINS!")
-            // TODO: Сохранить результат игры в базу данных (победа игрока)
+            saveGameResult(winnerIsPlayer = true) // <-- Сохраняем результат игры
             // TODO: Возможно, показать диалог о победе и предложить новую игру/вернуться в меню
         } else if (allPlayerShipsSunk) {
             statusTextView.text = "К сожалению, вы проиграли. Компьютер победил!"
             isGameOver = true
             Log.d("GameActivity", "checkGameOver: Computer WINS!")
-            // TODO: Сохранить результат игры в базу данных (победа компьютера)
+            saveGameResult(winnerIsPlayer = false) // <-- Сохраняем результат игры
             // TODO: Возможно, показать диалог о поражении и предложить новую игру/вернуться в меню
         }
         // Если игра окончена, поле остается на том, на котором оно было в момент окончания.
@@ -848,6 +859,31 @@ class GameActivity : AppCompatActivity() {
             Log.d("GameActivity", "checkGameOver: Game is over.")
         }
     }
+
+    // --- Метод для сохранения результата игры в Room Database ---
+    private fun saveGameResult(winnerIsPlayer: Boolean) {
+        Log.d("GameActivity", "saveGameResult: Saving game result. Player won: $winnerIsPlayer")
+        val result = GameResultEntity(
+            timestamp = System.currentTimeMillis(), // Текущее время
+            winner = if (winnerIsPlayer) "Игрок" else "Компьютер",
+            playerWon = winnerIsPlayer
+        )
+
+        // Запускаем корутину для асинхронной вставки в БД
+        lifecycleScope.launch {
+            try {
+                val resultId = gameResultDao.insertGameResult(result)
+                Log.d("GameActivity", "saveGameResult: Game result saved with ID: $resultId")
+                // TODO: Возможно, показать подтверждение пользователю?
+            } catch (e: Exception) {
+                Log.e("GameActivity", "saveGameResult: Failed to save game result", e)
+                // TODO: Обработка ошибки сохранения
+                Toast.makeText(this@GameActivity, "Ошибка сохранения результата игры.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    // --- Конец метода сохранения ---
+
 
     // Обновляет текст в TextView статуса игры (если игра не окончена)
     private fun updateStatusText() {
@@ -859,8 +895,6 @@ class GameActivity : AppCompatActivity() {
         Log.d("GameActivity", "updateStatusText: Status set to '${statusTextView.text}'")
     }
 
-    // TODO: Добавить метод для сохранения результата игры в Room Database
-    // private fun saveGameResult(winnerIsPlayer: Boolean) { ... }
 }
 
 // TODO: Если используются расширения dpToPx, убедитесь, что они объявлены в отдельном файле или здесь вне класса
