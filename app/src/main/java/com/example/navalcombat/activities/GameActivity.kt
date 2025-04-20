@@ -1,4 +1,4 @@
-package com.example.navalcombat.activities // Убедитесь, что пакет соответствует вашему проекту
+package com.example.navalcombat.activities
 
 import android.content.Context
 import android.content.Intent
@@ -8,7 +8,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log // Импортируем Log для отладки
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -23,13 +23,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.updatePadding
 import androidx.gridlayout.widget.GridLayout
-import com.example.navalcombat.R // Убедитесь, что пакет соответствует вашему проекту
-import com.example.navalcombat.model.CellState // Импортируем из game.model
-import com.example.navalcombat.model.Ship // Импортируем класс Ship
-import com.example.navalcombat.model.ShipToPlace // Импортируем из game.model (хотя он не нужен в GameActivity)
-// import com.example.navalcombat.utils.dpToPx // Если создавали utils пакет, импортируйте оттуда
+import com.example.navalcombat.R
+import com.example.navalcombat.model.CellState
+import com.example.navalcombat.model.Ship
 import java.io.Serializable
-import java.util.Stack // Импортируем Stack для поиска кораблей
+import java.util.Stack
 import kotlin.random.Random
 
 class GameActivity : AppCompatActivity() {
@@ -44,10 +42,8 @@ class GameActivity : AppCompatActivity() {
     private lateinit var opponentRowLabelsLayout: LinearLayout
     private lateinit var playerColLabelsLayout: LinearLayout
     private lateinit var playerRowLabelsLayout: LinearLayout
-    // --- ИЗМЕНЕНО: Удалена кнопка Назад ---
-    // private lateinit var buttonUndoLastShot: Button
-    // --- Конец изменений ---
-    private lateinit var buttonStartBattle: Button // Кнопка Начать бой (скрыта во время игры)
+    // Кнопка Начать бой (найдена, но не используется в процессе игры)
+    private lateinit var buttonStartBattle: Button
     // --- Конец UI элементов ---
 
     // --- Логическая модель данных и состояние игры ---
@@ -63,17 +59,9 @@ class GameActivity : AppCompatActivity() {
     private var isPlayerTurn = true
     private var isGameOver = false
 
-    private val gridSize = 10 // <-- Значение должно быть 10
+    private val gridSize = 10 // <-- Размер поля 10x10
 
-    private val columnLabels = arrayOf("А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "К")
-    private val shipSizes = listOf(4, 3, 3, 2, 2, 2, 1, 1, 1, 1) // Размеры для расстановки
-
-    // --- ИЗМЕНЕНО: Удалено состояние для отмены хода ---
-    // private var savedOpponentBoardState: Array<Array<CellState>>? = null
-    // private var savedOpponentShipsState: MutableList<Ship>? = null
-    // private var wasPlayerTurnBeforeShot: Boolean = true
-    // --- Конец изменений ---
-
+    private val shipSizes = listOf(4, 3, 3, 2, 2, 2, 1, 1, 1, 1) // Стандартные размеры кораблей для расстановки
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,15 +80,10 @@ class GameActivity : AppCompatActivity() {
         opponentRowLabelsLayout = findViewById(R.id.opponentRowLabels)
         playerColLabelsLayout = findViewById(R.id.playerColLabels)
         playerRowLabelsLayout = findViewById(R.id.playerRowLabels)
-        // --- ИЗМЕНЕНО: Удален поиск кнопки Назад ---
-        // private lateinit var buttonUndoLastShot: Button // <-- Удалена декларация выше
-        // buttonUndoLastShot = findViewById(R.id.buttonUndoLastShot) // <-- Удален поиск
-        // --- Конец изменений ---
-        buttonStartBattle = findViewById(R.id.buttonStartBattle) // Кнопка Начать бой (скрыта во время игры)
-        // Log.d("GameActivity", "onCreate: Buttons found: Undo=${buttonUndoLastShot!=null}, StartBattle=${buttonStartBattle!=null}") // Удален лог
+        buttonStartBattle = findViewById(R.id.buttonStartBattle)
         // --- Конец findViewById ---
 
-        val rootLayout = findViewById<LinearLayout>(R.id.rootLayoutGame) // Используем LinearLayout как корневой в этом макете
+        val rootLayout = findViewById<LinearLayout>(R.id.rootLayoutGame)
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
             val systemBarsInsets = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars())
             view.updatePadding(top = systemBarsInsets.top, bottom = systemBarsInsets.bottom)
@@ -113,16 +96,15 @@ class GameActivity : AppCompatActivity() {
         playerCellViews = Array(gridSize) { arrayOfNulls<TextView>(gridSize) }
         Log.d("GameActivity", "onCreate: CellViews arrays initialized.")
 
-
+        // Убедимся, что GridLayouts настроены ДО создания ячеек
+        opponentGridView.rowCount = gridSize
+        opponentGridView.columnCount = gridSize
         playerGridView.rowCount = gridSize
         playerGridView.columnCount = gridSize
-        opponentGridView.rowCount = gridSize // Убедимся, что оба GridLayout настроены
-        opponentGridView.columnCount = gridSize // Убедимся, что оба GridLayout настроены
         Log.d("GameActivity", "onCreate: GridLayouts row/col count set.")
 
         createLabels() // <-- Вызывается ОДИН РАЗ для создания всех меток
         Log.d("GameActivity", "onCreate: Labels created.")
-
 
         // --- Получаем расстановку игрока из Intent и создаем объекты Ship ---
         val receivedPlayerBoard = intent.getSerializableExtra("playerBoard") as? Array<Array<CellState>>
@@ -130,7 +112,6 @@ class GameActivity : AppCompatActivity() {
             playerBoard = receivedPlayerBoard // Устанавливаем доску игрока из Intent
             playerShips = findShipsOnBoard(playerBoard) // Находим и создаем объекты Ship на основе полученной доски
             Log.d("GameActivity", "onCreate: Player board received from Intent. Found ${playerShips.size} ships.")
-            setupGame() // Запускаем остальную настройку игры (расстановка компа)
         } else {
             // Fallback: Если доска не получена (не должно происходить при запуске из SetupActivity)
             Log.e("GameActivity", "onCreate: Player board NOT received from Intent! Using random placement for player.")
@@ -138,24 +119,20 @@ class GameActivity : AppCompatActivity() {
             playerBoard = createEmptyBoard()
             playerShips = placeShipsRandomlyAndCreateObjects(playerBoard) // Случайная расстановка и создание Ship
             Log.d("GameActivity", "onCreate: Fallback random placement for player. Found ${playerShips.size} ships.")
-            setupGame() // Запускаем остальную настройку
         }
         // --- Конец получения данных из Intent ---
+
+        setupGame() // Запускаем остальную настройку игры (расстановка компа)
 
         // --- Создаем View ячеек для обоих полей ОДИН РАЗ ---
         createGridCells(opponentGridView, opponentBoard, true) // <-- Вызывается ОДИН РАЗ для противника
         createGridCells(playerGridView, playerBoard, false) // <-- Вызывается ОДИН РАЗ для игрока
         Log.d("GameActivity", "onCreate: Grid cells created for both boards.")
 
-
         // Изначально показываем поле противника и обновляем его UI
-        showBoard(true) // true = показать поле противника. Это также вызовет updateStatusText и updateGridCells
+        // showBoard() вызовет updateStatusText(), который установит "Ваш ход"
+        showBoard(true) // true = показать поле противника.
         Log.d("GameActivity", "onCreate: Initial board set to opponent.")
-
-        // --- ИЗМЕНЕНО: Удален слушатель кнопки Назад и активация ---
-        // buttonUndoLastShot.setOnClickListener { undoLastPlayerShot() }
-        // buttonUndoLastShot.isEnabled = false
-        // --- Конец изменений ---
 
         Log.d("GameActivity", "onCreate: Finished.")
     }
@@ -166,13 +143,15 @@ class GameActivity : AppCompatActivity() {
     private fun setupGame() {
         Log.d("GameActivity", "setupGame: Starting.")
         // playerBoard и playerShips уже установлены в onCreate
+
         opponentBoard = createEmptyBoard() // Создаем пустую доску для противника
+        // --- ИСПРАВЛЕНО: Используем обновленный метод расстановки ---
+        opponentShips = placeShipsRandomlyAndCreateObjects(opponentBoard) // Случайная расстановка и создание Ship
+        Log.d("GameActivity", "setupGame: Opponent ships placed. Found ${opponentShips.size} ships.")
+        // --- Конец исправления ---
 
         isPlayerTurn = true // Игрок всегда начинает
         isGameOver = false
-
-        opponentShips = placeShipsRandomlyAndCreateObjects(opponentBoard) // Случайная расстановка и создание Ship
-        Log.d("GameActivity", "setupGame: Opponent ships placed. Found ${opponentShips.size} ships.")
 
         Log.d("GameActivity", "setupGame: Finished.")
     }
@@ -184,8 +163,7 @@ class GameActivity : AppCompatActivity() {
     }
 
     // --- Метод для НАХОЖДЕНИЯ кораблей на логической доске и СОЗДАНИЯ объектов Ship ---
-    // Используется для доски игрока, полученной из SetupActivity, и для восстановления Ship объектов противника
-    // Обновлен для правильного подсчета попаданий при восстановлении из доски
+    // Используется для доски игрока, полученной из SetupActivity
     private fun findShipsOnBoard(board: Array<Array<CellState>>): MutableList<Ship> {
         Log.d("GameActivity", "findShipsOnBoard: Starting.")
         val ships = mutableListOf<Ship>()
@@ -214,7 +192,6 @@ class GameActivity : AppCompatActivity() {
                         if (board[currentCell.first][currentCell.second] == CellState.HIT || board[currentCell.first][currentCell.second] == CellState.SUNK) {
                             currentHits++
                         }
-
 
                         // Проверяем 4 соседние ячейки (верх, низ, лево, право)
                         val neighbors = listOf(
@@ -255,12 +232,13 @@ class GameActivity : AppCompatActivity() {
 
     // --- Случайная расстановка кораблей и СОЗДАНИЕ объектов Ship ---
     // Используется как для игрока (fallback), так и для противника
+    // ИСПРАВЛЕНО: Улучшена логика проверки окружения при размещении
     private fun placeShipsRandomlyAndCreateObjects(board: Array<Array<CellState>>): MutableList<Ship> {
         Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Starting.")
         val ships = mutableListOf<Ship>()
-        val random = Random(System.currentTimeMillis())
+        val random = Random(System.currentTimeMillis()) // Используем System.currentTimeMillis() для разной расстановки
 
-        val shipSizesCopy = shipSizes.toMutableList() // <-- shipSizes определена как свойство класса
+        val shipSizesCopy = shipSizes.toMutableList() // Копируем размеры кораблей для расстановки
 
         // Очищаем доску перед расстановкой
         for (r in 0 until gridSize) {
@@ -268,85 +246,115 @@ class GameActivity : AppCompatActivity() {
                 board[r][c] = CellState.EMPTY
             }
         }
+        Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Board cleared.")
 
         for (size in shipSizesCopy) {
             var placed = false
             var attempts = 0
-            val maxAttempts = 1000
+            val maxAttempts = 5000 // Увеличим количество попыток
+
+            Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Attempting to place ship of size $size...")
 
             while (!placed && attempts < maxAttempts) {
                 val row = random.nextInt(gridSize)
                 val col = random.nextInt(gridSize)
                 val isHorizontal = random.nextBoolean()
 
-                val tempBoard = Array(gridSize) { r -> Array(gridSize) { c -> board[r][c] } }
-                val shipCells = mutableListOf<Pair<Int, Int>>()
-
                 var canPlace = true
+                val potentialShipCells = mutableListOf<Pair<Int, Int>>() // Сохраняем клетки корабля для добавления в ships
+
+                // --- Проверка возможности размещения корабля и его окружения ---
+                // Корабль горизонтальный: занимает (row, col) до (row, col + size - 1)
+                // Корабль вертикальный: занимает (row, col) до (row + size - 1, col)
+
+                // Определяем границы прямоугольника 3x3 вокруг потенциального корабля
+                val checkRowStart = row - 1
+                val checkRowEnd = if (isHorizontal) row + 1 else row + size // Включая строку ниже самой нижней палубы
+                val checkColStart = col - 1
+                val checkColEnd = if (isHorizontal) col + size else col + 1 // Включая столбец правее самой правой палубы
+
+                // Сначала быстрая проверка, что сам корабль полностью внутри поля
+                var shipInBounds = true
                 for (i in 0 until size) {
-                    val r = if (isHorizontal) row else row + i
-                    val c = if (isHorizontal) col + i else col
-
-                    if (r < 0 || r >= gridSize || c < 0 || c >= gridSize) { canPlace = false; break }
-
-                    for (sr in (r - 1)..(r + 1)) {
-                        for (sc in (c - 1)..(c + 1)) {
-                            if (sr >= 0 && sr < gridSize && sc >= 0 && sc < gridSize) {
-                                if (tempBoard[sr][sc] == CellState.SHIP) { canPlace = false; break }
-                            }
-                        }
-                        if (!canPlace) break
+                    val shipRow = if (isHorizontal) row else row + i
+                    val shipCol = if (isHorizontal) col + i else col
+                    if (shipRow < 0 || shipRow >= gridSize || shipCol < 0 || shipCol >= gridSize) {
+                        shipInBounds = false
+                        break
                     }
-                    if (!canPlace) break
-
-                    tempBoard[r][c] = CellState.SHIP
-                    shipCells.add(Pair(r, c))
                 }
 
+                if (shipInBounds) {
+                    // Проверяем каждую клетку в расширенном прямоугольнике (корабль + 1 клетка вокруг)
+                    // Каждая такая клетка в пределах поля должна быть CellState.EMPTY на доске.
+                    for (rCheck in checkRowStart..checkRowEnd) {
+                        for (cCheck in checkColStart..checkColEnd) {
+                            // Убедимся, что проверяемая клетка в пределах поля
+                            if (rCheck >= 0 && rCheck < gridSize && cCheck >= 0 && cCheck < gridSize) {
+                                // Если клетка на доске НЕ ПУСТАЯ (т.е. занята другим кораблем, промахом и т.д.),
+                                // значит здесь нельзя разместить корабль.
+                                if (board[rCheck][cCheck] != CellState.EMPTY) {
+                                    canPlace = false
+                                    break // Выходим из цикла по столбцам
+                                }
+                            }
+                            // Если клетка за границами, это не мешает размещению корабля,
+                            // если сам корабль находится в пределах (что проверено shipInBounds).
+                        }
+                        if (!canPlace) break // Выходим из цикла по строкам
+                    }
+
+                    // Если дошли сюда и canPlace все еще true, значит окружение свободно.
+                    // Заполняем potentialShipCells
+                    if (canPlace) {
+                        for (i in 0 until size) {
+                            val shipRow = if (isHorizontal) row else row + i
+                            val shipCol = if (isHorizontal) col + i else col
+                            potentialShipCells.add(Pair(shipRow, shipCol))
+                        }
+                        // Двойная проверка: убедимся, что собрали нужное количество клеток
+                        if (potentialShipCells.size != size) {
+                            // Это не должно происходить, если shipInBounds был true
+                            Log.e("GameActivity", "Internal logic error: potentialShipCells size mismatch after successful placement check.")
+                            canPlace = false // Считаем, что размещение не удалось из-за внутренней ошибки
+                        }
+                    }
+
+                } else {
+                    // Корабль сам по себе выходит за границы поля, не можем его разместить
+                    canPlace = false
+                }
+                // --- Конец проверки ---
+
+
+                // Если проверка успешна (canPlace == true)
                 if (canPlace) {
-                    for (cell in shipCells) {
+                    // Размещаем корабль на РЕАЛЬНОЙ доске
+                    for (cell in potentialShipCells) {
                         board[cell.first][cell.second] = CellState.SHIP
                     }
-                    ships.add(Ship(size, shipCells)) // Создаем объект Ship с 0 попаданий
-                    placed = true
+                    ships.add(Ship(size, potentialShipCells)) // Создаем объект Ship с 0 попаданий
+                    placed = true // Корабль успешно размещен, выходим из while
+                    Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Successfully placed ship size $size at ($row,$col) isHorizontal=$isHorizontal.")
+                } else {
+                    attempts++
+                    // Опционально: логировать неудачные попытки для отладки
+                    // Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Cannot place ship size $size at ($row,$col) isHorizontal=$isHorizontal. Attempt $attempts. Reason: shipInBounds=$shipInBounds, canPlaceAfterCheck=$canPlace")
                 }
-                attempts++
             }
             if (!placed) {
-                Log.e("GameActivity", "placeShipsRandomlyAndCreateObjects: Failed to place ship $size randomly after $maxAttempts attempts.")
+                Log.e("GameActivity", "placeShipsRandomlyAndCreateObjects: FATAL ERROR: Failed to place ship $size randomly after $maxAttempts attempts.")
+                Toast.makeText(this, "Ошибка при расстановке кораблей компьютера. Игра невозможна.", Toast.LENGTH_LONG).show()
+                finish() // Завершаем Activity, так как игра не может начаться
+                return mutableListOf() // Возвращаем пустой список или генерируем исключение
             }
         }
-        Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Finished. Created ${ships.size} ships.")
+        Log.d("GameActivity", "placeShipsRandomlyAndCreateObjects: Finished placing ships. Created ${ships.size} ships.")
+        if (ships.size != shipSizes.size) {
+            Log.e("GameActivity", "placeShipsRandomlyAndCreateObjects: ERROR: Placed ${ships.size} ships, expected ${shipSizes.size}!")
+            Toast.makeText(this, "Ошибка при расстановке кораблей компьютера. Не все корабли размещены.", Toast.LENGTH_LONG).show()
+        }
         return ships
-    }
-
-
-    // Проверяет, можно ли разместить корабль (используется в random placement)
-    private fun canPlaceShip(board: Array<Array<CellState>>, row: Int, col: Int, size: Int, isHorizontal: Boolean): Boolean {
-        for (i in 0 until size) {
-            val currentRow = if (isHorizontal) row else row + i
-            val currentCol = if (isHorizontal) col + i else col
-            if (currentRow < 0 || currentRow >= gridSize || currentCol < 0 || currentCol >= gridSize) return false
-            for (r in (currentRow - 1)..(currentRow + 1)) {
-                for (c in (currentCol - 1)..(currentCol + 1)) {
-                    if (r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
-                        if (board[r][c] == CellState.SHIP) return false
-                    }
-                }
-            }
-        }
-        return true
-    }
-
-    // Размещает корабль на логической доске (используется в random placement)
-    private fun placeShip(board: Array<Array<CellState>>, row: Int, col: Int, size: Int, isHorizontal: Boolean) {
-        for (i in 0 until size) {
-            val currentRow = if (isHorizontal) row else row + i
-            val currentCol = if (isHorizontal) col + i else col
-            if (currentRow >= 0 && currentRow < gridSize && currentCol >= 0 && currentCol < gridSize) {
-                board[currentRow][currentCol] = CellState.SHIP
-            }
-        }
     }
 
 
@@ -356,10 +364,8 @@ class GameActivity : AppCompatActivity() {
     // Вызывается ОДИН РАЗ в onCreate для каждого поля.
     private fun createGridCells(grid: GridLayout, board: Array<Array<CellState>>, isOpponent: Boolean) {
         Log.d("GameActivity", "createGridCells: Starting for isOpponent=$isOpponent.")
-        grid.removeAllViews()
+        grid.removeAllViews() // Очищаем, если вдруг там что-то было
         val cellReferences = if (isOpponent) opponentCellViews else playerCellViews
-
-        Log.d("GameActivity", "createGridCells: Before filling, cellReferences.size = ${cellReferences.size}")
 
         // Проверяем, что массив cellReferences проинициализирован с правильным размером
         if (cellReferences.isEmpty() || gridSize == 0 || cellReferences.size != gridSize || (gridSize > 0 && cellReferences[0] == null) || (gridSize > 0 && cellReferences[0]!!.size != gridSize)) {
@@ -383,24 +389,20 @@ class GameActivity : AppCompatActivity() {
                 if (row < cellReferences.size && col < (cellReferences.getOrNull(row)?.size ?: 0)) {
                     cellReferences[row][col] = cellView // <-- Сохраняем ссылку
                 } else {
-                    Log.e("GameActivity", "FATAL ERROR: Index outside bounds of cellReferences during creation (should not happen): isOpponent=$isOpponent, row=$row, col=$col.")
+                    // Это должно быть обнаружено предыдущей проверкой, но на всякий случай
+                    Log.e("GameActivity", "FATAL ERROR: Index outside bounds of cellReferences during creation: isOpponent=$isOpponent, row=$row, col=$col.")
                     throw IndexOutOfBoundsException("Cell references array size mismatch during creation for isOpponent=$isOpponent")
                 }
                 // --- Конец заполнения массива ---
-
-                // updateCellView(cellView, board[row][col], isOpponent) // <-- НЕ ВЫЗЫВАЕМ ЗДЕСЬ!
 
                 // Обработка клика (только для поля противника)
                 if (isOpponent) {
                     cellView.setOnClickListener {
                         if (!isGameOver && isPlayerTurn) { // Проверяем ход и конец игры
-                            // --- ИЗМЕНЕНО: Удален вызов сохранения состояния ---
-                            // saveStateBeforePlayerShot() // <-- Удален вызов сохранения
-                            // --- Конец изменения ---
                             handlePlayerShot(row, col)
                         } else {
                             // Если не ход игрока или игра окончена, но клик по полю противника
-                            Log.d("GameActivity", "Click on opponent board ignored. isPlayerTurn=$isPlayerTurn, isGameOver=$isGameOver")
+                            // Log.d("GameActivity", "Click on opponent board ignored. isPlayerTurn=$isPlayerTurn, isGameOver=$isGameOver")
                         }
                     }
                 } else {
@@ -410,7 +412,7 @@ class GameActivity : AppCompatActivity() {
                 grid.addView(cellView) // Добавляем View в GridLayout
             }
         }
-        Log.d("GameActivity", "createGridCells: Finished filling grid with views for isOpponent=$isOpponent.")
+        Log.d("GameActivity", "createGridCells: Finished filling grid with views for isOpponent=$isOpponent. Total views: ${grid.childCount}")
     }
 
 
@@ -440,32 +442,30 @@ class GameActivity : AppCompatActivity() {
                 cellViews.getOrNull(row)?.getOrNull(col)?.let { cellView ->
                     val state = currentBoard[row][col] // Состояние из логической доски
 
-                    // --- ВАЖНО: Проверяем, является ли ячейка частью ПОТОПЛЕННОГО корабля ---
-                    // Определяем фактическое состояние для отображения (например, HIT vs SUNK)
+                    // --- ВАЖНО: Определяем фактическое состояние для отображения (например, HIT vs SUNK) ---
                     var actualState = state
-                    // Проверяем на sunk только если базовое состояние SHIP, HIT или SUNK
+                    // Проверяем на sunk только если базовое состояние может быть частью корабля
                     if (actualState == CellState.SHIP || actualState == CellState.HIT || actualState == CellState.SUNK) {
                         // Ищем корабль, которому принадлежит эта ячейка с координатами [row, col]
                         val ship = currentShips.find { it.cells.contains(Pair(row, col)) }
                         if (ship?.isSunk() == true) {
-                            // Если корабль найден и он потоплен, меняем состояние для отображения
+                            // Если корабль найден и он потоплен, меняем состояние для отображения на SUNK
                             actualState = CellState.SUNK
                         } else if (actualState == CellState.SUNK) {
-                            // Если базовое состояние было SUNK, но корабль по логике НЕ SUNK (например, после отмены)
-                            // то фактическое состояние должно быть HIT, если ячейка действительно была HIT
-                            // Проверяем, является ли ячейка частью какого-либо корабля И была ли она HIT на доске
-                            // !!! ИСПРАВЛЕНО: Используем currentBoard для проверки HIT/SUNK
-                            val partOfHitShip = currentShips.any { s -> s.cells.contains(Pair(row, col)) } && (currentBoard[row][col] == CellState.HIT || currentBoard[row][col] == CellState.SUNK) // <-- ИСПРАВЛЕНО: Используем currentBoard
-                            if(partOfHitShip) {
-                                actualState = CellState.HIT // Если это часть раненого корабля на доске
+                            // Если логическое состояние SUNK, но корабль по объекту Ship еще не потоплен,
+                            // это несоответствие. Отображаем как HIT, если клетка была HIT на доске.
+                            // ИСПРАВЛЕНО: Проверка на HIT/SUNK должна быть по самой доске
+                            if (currentBoard[row][col] == CellState.HIT || currentBoard[row][col] == CellState.SUNK) {
+                                actualState = CellState.HIT // Если клетка была отмечена как HIT или SUNK на доске, но корабль не потоплен, показываем HIT
                             } else {
-                                // Иначе это ошибка в логике состояния доски/кораблей
-                                actualState = CellState.EMPTY // Показываем как воду, чтобы не вводить в заблуждение
-                                Log.e("GameActivity", "updateGridCells: Found unexpected CellState.SUNK at $row,$col but ship is not SUNK and board state is not HIT/SUNK. Board state logic error.")
+                                // Если логическое состояние SUNK, но на доске ни HIT, ни SUNK, и корабль не потоплен,
+                                // это ошибка в логике. Отображаем как EMPTY, чтобы не вводить в заблуждение.
+                                actualState = CellState.EMPTY
+                                Log.e("GameActivity", "updateGridCells: Found unexpected CellState.SUNK at $row,$col. Board state/Ship object mismatch.")
                             }
                         }
                     }
-                    // --- Конец проверки на потопление ---
+                    // --- Конец определения фактического состояния ---
 
                     updateCellView(cellView, actualState, isOpponent)
                 } ?: run {
@@ -485,7 +485,7 @@ class GameActivity : AppCompatActivity() {
     // --- Метод для расстановки точек промаха вокруг ПОТОПЛЕННЫХ кораблей ---
     // Вызывается из updateGridCells.
     private fun placeMissMarksAroundSunkShips(board: Array<Array<CellState>>, cellViews: Array<Array<TextView?>>, ships: List<Ship>, isOpponentBoard: Boolean) {
-        Log.d("GameActivity", "placeMissMarksAroundSunkShips: Starting for isOpponentBoard=$isOpponentBoard.")
+        // Log.d("GameActivity", "placeMissMarksAroundSunkShips: Starting for isOpponentBoard=$isOpponentBoard.")
         for (ship in ships) {
             if (ship.isSunk()) { // Если корабль потоплен
                 for (cell in ship.cells) { // Проходим по всем ячейкам потопленного корабля
@@ -503,23 +503,22 @@ class GameActivity : AppCompatActivity() {
                                 if (board[r][c] == CellState.EMPTY) {
                                     // Проверяем, что View ячейки существует
                                     cellViews.getOrNull(r)?.getOrNull(c)?.let { cellView ->
-                                        // Обновляем логическую доску только если это пустая вода
-                                        if (board[r][c] == CellState.EMPTY) { // Двойная проверка
-                                            board[r][c] = CellState.MISS // Помечаем на логической доске как промах
-                                            // Обновляем UI ячейки (используем флаг isOpponentBoard из updateGridCells)
-                                            updateCellView(cellView, CellState.MISS, isOpponentBoard)
-                                        }
+                                        // Обновляем логическую доску
+                                        board[r][c] = CellState.MISS // Помечаем на логической доске как промах
+                                        // Обновляем UI ячейки (используем флаг isOpponentBoard)
+                                        updateCellView(cellView, CellState.MISS, isOpponentBoard)
                                     } ?: run {
                                         Log.e("GameActivity", "View ячейки отсутствует в cellViews по адресу: isOpponentBoard=$isOpponentBoard, row=$r, col=$c during placing miss marks.")
                                     }
                                 }
+                                // Если ячейка уже была MISS или HIT, ничего не делаем.
                             }
                         }
                     }
                 }
             }
         }
-        Log.d("GameActivity", "placeMissMarksAroundSunkShips: Finished.")
+        // Log.d("GameActivity", "placeMissMarksAroundSunkShips: Finished.")
     }
 
 
@@ -528,7 +527,8 @@ class GameActivity : AppCompatActivity() {
         cellView ?: return
 
         cellView.text = ""
-        cellView.setTextColor(ContextCompat.getColor(this, android.R.color.transparent))
+        cellView.setTextColor(ContextCompat.getColor(this, android.R.color.transparent)) // Прозрачный текст по умолчанию
+        cellView.setTypeface(null, Typeface.NORMAL) // Сброс стиля текста
 
         when (state) {
             CellState.EMPTY -> cellView.setBackgroundResource(R.drawable.cell_water)
@@ -542,17 +542,22 @@ class GameActivity : AppCompatActivity() {
             CellState.HIT -> {
                 cellView.setBackgroundResource(R.drawable.cell_hit) // Красный фон
                 cellView.text = "X" // Текст "X"
-                cellView.setTextColor(ContextCompat.getColor(this, android.R.color.white))
+                cellView.setTextColor(ContextCompat.getColor(this, android.R.color.white)) // Белый текст для X
+                cellView.setTypeface(null, Typeface.BOLD) // Жирный текст
             }
             CellState.MISS -> {
                 cellView.setBackgroundResource(R.drawable.cell_water) // Фон воды
                 cellView.text = "•" // Текст "точка"
-                cellView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark)) // КРАСНЫЙ текст точки
+                // Убедитесь, что у вас есть ресурс R.color.holo_red_dark_custom или используйте стандартный цвет
+                cellView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark)) // Темно-красный текст точки
+                cellView.setTypeface(null, Typeface.BOLD) // Жирный текст
             }
             CellState.SUNK -> {
                 cellView.setBackgroundResource(R.drawable.cell_sunk) // Черный фон
                 cellView.text = "X" // Текст "X"
-                cellView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark)) // Красный текст "X"
+                // Убедитесь, что у вас есть ресурс R.color.holo_red_dark_custom или используйте стандартный цвет
+                cellView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark)) // Темно-красный текст "X"
+                cellView.setTypeface(null, Typeface.BOLD) // Жирный текст
             }
         }
         cellView.gravity = Gravity.CENTER
@@ -563,10 +568,10 @@ class GameActivity : AppCompatActivity() {
         val labelColor = ContextCompat.getColor(this, R.color.purple_700)
         val labelTextSize = 14f
 
-        opponentColLabelsLayout.removeAllViews() // Для противника
-        opponentRowLabelsLayout.removeAllViews() // Для противника
-        playerColLabelsLayout.removeAllViews() // Для игрока
-        playerRowLabelsLayout.removeAllViews() // Для игрока
+        opponentColLabelsLayout.removeAllViews()
+        opponentRowLabelsLayout.removeAllViews()
+        playerColLabelsLayout.removeAllViews()
+        playerRowLabelsLayout.removeAllViews()
 
         val columnLabels = arrayOf("А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "К")
 
@@ -623,9 +628,10 @@ class GameActivity : AppCompatActivity() {
             playerBoardContainer.visibility = View.GONE
         } else {
             playerBoardContainer.visibility = View.VISIBLE
-            opponentBoardContainer.visibility = View.GONE // Исправлен порядок скрытия/показа
+            opponentBoardContainer.visibility = View.GONE
         }
         // Обновляем статус текст и UI поля после переключения
+        // updateStatusText() здесь вызывается, чтобы установить "Ваш ход" или "Ход компьютера..."
         updateStatusText()
         updateGridCells() // <-- ВАЖНО: Обновляем UI после переключения поля, чтобы отобразить актуальное состояние
         Log.d("GameActivity", "showBoard: Switching finished, updateGridCells called.")
@@ -647,139 +653,172 @@ class GameActivity : AppCompatActivity() {
 
             if (cellState == CellState.SHIP) {
                 Log.d("GameActivity", "handlePlayerShot: Hit!")
+                // Ищем корабль, которому принадлежит эта ячейка
                 val hitShip = opponentShips.find { it.cells.contains(Pair(row, col)) }
-                hitShip?.let { ship ->
-                    ship.hits++
 
-                    opponentBoard[row][col] = CellState.HIT
+                if (hitShip != null) {
+                    hitShip.hits++
+                    opponentBoard[row][col] = CellState.HIT // Обновляем состояние на доске
 
-                    if (ship.isSunk()) {
-                        statusTextView.text = "Убил!"
-                        Log.d("GameActivity", "handlePlayerShot: Sunk a ${ship.size}-палубник!")
-                        for (cell in ship.cells) {
+                    if (hitShip.isSunk()) {
+                        statusTextView.text = "Убил ${hitShip.size}-палубник!" // Sets the correct text
+                        Log.d("GameActivity", "handlePlayerShot: Sunk a ${hitShip.size}-палубник!")
+                        // Обновляем все клетки потопленного корабля на доске на SUNK
+                        for (cell in hitShip.cells) {
                             opponentBoard[cell.first][cell.second] = CellState.SUNK
                         }
                         // Точки вокруг будут расставлены в updateGridCells
                     } else {
-                        statusTextView.text = "Ранил!"
-                        Log.d("GameActivity", "handlePlayerShot: Hit a ${ship.size}-палубник!")
+                        statusTextView.text = "Ранил!" // Sets the correct text
+                        Log.d("GameActivity", "handlePlayerShot: Hit a ${hitShip.size}-палубник!")
                     }
 
                     updateGridCells() // <-- Вызываем обновление UI ПОЛЯ ПРОТИВНИКА
 
-                    checkGameOver()
+                    checkGameOver() // Might set isGameOver to true
 
                     if (!isGameOver) {
-                        Log.d("GameActivity", "handlePlayerShot: Player hit, turn continues.")
+                        // Если игра не окончена и игрок попал/убил, ход игрока продолжается
+                        Log.d("GameActivity", "handlePlayerShot: Player hit/sunk, turn continues.")
+                        // --- ИСПРАВЛЕНО: УДАЛЕН вызов updateStatusText() ЗДЕСЬ ---
+                        // updateStatusText() // <-- ЭТО БЫЛА ПРОБЛЕМА
+                        // --- Конец исправления ---
+                        // Статус "Ранил!" или "Убил!" УЖЕ установлен выше и останется на экране до следующего действия
+                    } else {
+                        // Игра окончена, checkGameOver обработал статус победы
+                        Log.d("GameActivity", "handlePlayerShot: Game is over after player's move.")
                     }
 
-                } ?: run {
-                    Log.e("GameActivity", "handlePlayerShot: Hit but target ship not found in opponentShips list!")
+                } else {
+                    // Этот случай не должен происходить, если логика расстановки и findShipsOnBoard корректны
+                    Log.e("GameActivity", "handlePlayerShot: Hit at $row,$col but target ship not found in opponentShips list!")
                     Toast.makeText(this, "Ошибка игры: Попал, но не нашел корабль!", Toast.LENGTH_SHORT).show()
-                    opponentBoard[row][col] = CellState.HIT // Все равно помечаем как попадание
+                    opponentBoard[row][col] = CellState.HIT // Все равно помечаем как попадание на доске
                     updateGridCells() // Обновляем UI
+                    statusTextView.text = "Ошибка: Неизвестное попадание!" // Устанавливаем статус ошибки
+                    // В случае ошибки, пусть ход перейдет к компьютеру, чтобы не зависнуть
+                    isPlayerTurn = false
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        showBoard(false) // Переключаем на поле игрока (статус обновится на "Ход компьютера...")
+                        computerTurn()
+                    }, 1000)
                 }
 
-
-            } else { // Промах
+            } else { // Промах игрока!
                 Log.d("GameActivity", "handlePlayerShot: Miss.")
                 opponentBoard[row][col] = CellState.MISS
-                statusTextView.text = "Промах!"
+                statusTextView.text = "Промах!" // Sets the correct text
                 updateGridCells() // <-- Вызываем обновление UI после промаха
 
                 isPlayerTurn = false // Переход хода к компьютеру
 
                 Handler(Looper.getMainLooper()).postDelayed({
-                    showBoard(false) // <-- Переключаем на поле игрока
+                    showBoard(false) // <-- Переключаем на поле игрока (статус обновится на "Ход компьютера...")
+                    // updateStatusText() // Нет необходимости, showBoard уже вызывает
                     computerTurn() // Компьютер делает свой ход
-                }, 1000) // Задержка перед переключением и ходом компьютера
+                }, 1000) // Задержка перед переключением и ходом компьютера (1 секунда)
             }
-        } else { // Игра окончена
-            Log.d("GameActivity", "Click on opponent board ignored. game is over.")
+        } else { // Игра окончена или не ход игрока
+            // Log.d("GameActivity", "Click on opponent board ignored. game is over or not player's turn.")
         }
     }
 
     // Реализует ход компьютера
     private fun computerTurn() {
         Log.d("GameActivity", "computerTurn: Starting. isPlayerTurn=$isPlayerTurn")
-        if (isGameOver || isPlayerTurn) { // Проверяем ход и конец игры
-            Log.d("GameActivity", "computerTurn: Skipping turn, game over or not computer's turn.")
+        if (isGameOver || isPlayerTurn) { // Проверяем, если игра окончена или сейчас не ход компьютера
+            Log.d("GameActivity", "computerTurn: Skipping turn. isGameOver=$isGameOver, isPlayerTurn=$isPlayerTurn")
             return
         }
 
-        statusTextView.text = "Ход компьютера..." // Этот статус уже установлен в showBoard(false)
+        statusTextView.text = "Ход компьютера..." // Этот статус уже установлен в showBoard(false) перед вызовом computerTurn
 
         var row: Int
         var col: Int
         var isValidShot: Boolean
-        val random = Random(System.currentTimeMillis())
+        val random = Random(System.currentTimeMillis()) // Можно использовать Random() без аргумента
 
+        // TODO: Реализовать более умный AI компьютера (поиск раненого корабля и т.д.)
+        // Сейчас компьютер стреляет просто случайно в любую нестреляную клетку.
         do {
             row = random.nextInt(gridSize)
             col = random.nextInt(gridSize)
             val state = playerBoard[row][col]
-            isValidShot = state != CellState.HIT && state != CellState.MISS && state != CellState.SUNK
+            // Выстрел валиден, если клетка EMPTY или SHIP (не стреляли сюда раньше)
+            isValidShot = state == CellState.EMPTY || state == CellState.SHIP
         } while (!isValidShot)
         Log.d("GameActivity", "computerTurn: Shot at $row,$col.")
 
-
+        // Небольшая задержка для имитации "думающего" компьютера
         Handler(Looper.getMainLooper()).postDelayed({
             val targetState = playerBoard[row][col]
 
             if (targetState == CellState.SHIP) {
                 Log.d("GameActivity", "computerTurn: Hit!")
 
+                // Ищем корабль игрока, которому принадлежит эта ячейка
                 val hitShip = playerShips.find { it.cells.contains(Pair(row, col)) }
-                hitShip?.let { ship ->
-                    ship.hits++
 
-                    playerBoard[row][col] = CellState.HIT
+                if (hitShip != null) {
+                    hitShip.hits++
+                    playerBoard[row][col] = CellState.HIT // Обновляем состояние на доске игрока
 
-                    if (ship.isSunk()) {
-                        statusTextView.text = "Ваш корабль ${ship.size} потоплен!"
-                        Log.d("GameActivity", "computerTurn: Sunk player's ${ship.size}-палубник!")
-                        for (cell in ship.cells) {
+                    if (hitShip.isSunk()) {
+                        statusTextView.text = "Ваш корабль ${hitShip.size} потоплен!"
+                        Log.d("GameActivity", "computerTurn: Sunk player's ${hitShip.size}-палубник!")
+                        // Обновляем все клетки потопленного корабля на доске на SUNK
+                        for (cell in hitShip.cells) {
                             playerBoard[cell.first][cell.second] = CellState.SUNK
                         }
                         // Точки вокруг будут расставлены в updateGridCells
                     } else {
-                        statusTextView.text = "Компьютер попал в ваш корабль ${ship.size}!"
-                        Log.d("GameActivity", "computerTurn: Hit player's ${ship.size}-палубник!")
+                        statusTextView.text = "Компьютер попал в ваш корабль ${hitShip.size}!"
+                        Log.d("GameActivity", "computerTurn: Hit player's ${hitShip.size}-палубник!")
                     }
 
                     updateGridCells() // <-- Обновляем UI ПОЛЯ ИГРОКА
 
-                    checkGameOver()
+                    checkGameOver() // Might set isGameOver to true
 
                     if (!isGameOver) {
-                        Log.d("GameActivity", "computerTurn: Computer hit, turn continues.")
-                        Handler(Looper.getMainLooper()).postDelayed({ computerTurn() }, 1000)
+                        // Если игра не окончена и компьютер попал/убил, его ход продолжается
+                        Log.d("GameActivity", "computerTurn: Computer hit/sunk, turn continues. Next computer turn scheduled.")
+                        // Статус "Ваш корабль... потоплен!" или "Компьютер попал..." УЖЕ установлен выше
+                        Handler(Looper.getMainLooper()).postDelayed({ computerTurn() }, 1000) // Задержка перед следующим ходом компьютера
                     } else {
-                        // Игра окончена
+                        Log.d("GameActivity", "computerTurn: Game is over after computer's move.")
+                        // Игра окончена, остаемся на поле игрока с итоговым статусом
+                        // checkGameOver уже установил текст статуса
                     }
 
-                } ?: run {
-                    Log.e("GameActivity", "computerTurn: Hit but target ship not found in playerShips list!")
+                } else {
+                    // Этот случай не должен происходить
+                    Log.e("GameActivity", "computerTurn: Hit at $row,$col but target ship not found in playerShips list!")
                     Toast.makeText(this, "Ошибка игры: Компьютер попал, но не нашел корабль!", Toast.LENGTH_SHORT).show()
                     playerBoard[row][col] = CellState.HIT
                     updateGridCells()
+                    statusTextView.text = "Ошибка: Компьютер попал (неизвестно куда)!" // Устанавливаем статус ошибки
+                    // Чтобы не зависнуть, передаем ход игроку
+                    isPlayerTurn = true
+                    Handler(Looper.getMainLooper()).postDelayed({ showBoard(true) }, 1000) // Переключаем на поле противника (статус обновится на "Ваш ход")
                 }
 
 
             } else { // Промах компьютера!
                 Log.d("GameActivity", "computerTurn: Miss.")
                 playerBoard[row][col] = CellState.MISS
-                statusTextView.text = "Компьютер промахнулся!"
+                statusTextView.text = "Компьютер промахнулся!" // Sets the correct text
                 updateGridCells() // <-- Обновляем UI ПОЛЯ ИГРОКА
 
                 isPlayerTurn = true // Переход хода к игроку
 
                 Handler(Looper.getMainLooper()).postDelayed({
-                    showBoard(true) // <-- Переключаем на поле противника
-                }, 1000) // Задержка перед переключением обратно
+                    showBoard(true) // <-- Переключаем на поле противника (статус обновится на "Ваш ход")
+                    // updateStatusText() // Нет необходимости, showBoard уже вызывает
+                }, 1000) // Задержка перед переключением обратно (1 секунда)
             }
             Log.d("GameActivity", "computerTurn: Delayed action finished.")
-        }, 1000)
+        }, 1000) // Общая задержка перед выполнением выстрела компьютера (1 секунда)
         Log.d("GameActivity", "computerTurn: Finished, delayed shot scheduled.")
     }
 
@@ -804,58 +843,32 @@ class GameActivity : AppCompatActivity() {
             // TODO: Возможно, показать диалог о поражении и предложить новую игру/вернуться в меню
         }
         // Если игра окончена, поле остается на том, на котором оно было в момент окончания.
-        // updateStatusText() вызывается в showBoard.
+        // updateStatusText() не вызывается, чтобы оставить итоговый статус.
         if (isGameOver) {
             Log.d("GameActivity", "checkGameOver: Game is over.")
         }
     }
 
-    // Обновляет текст в TextView статуса игры
+    // Обновляет текст в TextView статуса игры (если игра не окончена)
     private fun updateStatusText() {
-        if (isGameOver) return
+        if (isGameOver) {
+            Log.d("GameActivity", "updateStatusText: Game is over, not updating status text.")
+            return // Не обновляем статус, если игра окончена
+        }
         statusTextView.text = if (isPlayerTurn) "Ваш ход" else "Ход компьютера..."
         Log.d("GameActivity", "updateStatusText: Status set to '${statusTextView.text}'")
     }
-
-    // --- ИЗМЕНЕНО: Удалена логика отмены хода ---
-    // private fun saveStateBeforePlayerShot() { ... }
-    // private fun undoLastPlayerShot() { ... }
-    // --- Конец изменений ---
-
 
     // TODO: Добавить метод для сохранения результата игры в Room Database
     // private fun saveGameResult(winnerIsPlayer: Boolean) { ... }
 }
 
-// --- Extension функция для конвертации dp в px ---
-// Эта функция ДОЛЖНА БЫТЬ ВНЕ КЛАССА GameActivity.
-// Если у вас есть отдельный файл утилит, поместите ее туда и импортируйте.
+// TODO: Если используются расширения dpToPx, убедитесь, что они объявлены в отдельном файле или здесь вне класса
+// import android.content.res.Resources // Импорт, если dpToPx здесь
 /*
-import android.content.res.Resources // Импортируем Resources здесь, если функция тут
-
 fun Int.dpToPx(resources: Resources): Int {
     return (this * resources.displayMetrics.density).toInt()
 }
 */
-// Убедитесь, что импорт Resources в начале файла есть, если функция тут.
-// Если вы используете версию из utils пакета, убедитесь в правильном импорте:
-// import com.example.navalcombat.utils.dpToPx // Пример импорта из utils
-// В данном коде я предполагаю, что вы используете импорт из utils
-// Если вы используете раскомментированную версию, убедитесь, что resources доступен.
-// В этом случае удобнее сделать extension функцию для Context или View.
-// Например:
-/*
-import android.view.View // Импорт View
-fun View.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-// Тогда в updateShipsListUI вызывать так: 16.dpToPx()
-*/
-// Но оставим текущий вариант с передачей resources, убедитесь, что импорт utils.dpToPx правильный.
-
-// Если вы не используете utils пакет, раскомментируйте эту версию:
-/*
-import android.content.res.Resources
-fun Int.dpToPx(resources: Resources): Int {
-    return (this * resources.displayMetrics.density).toInt()
-}
-*/
-// И убедитесь, что импорт Resources в начале файла есть.
+// Или из пакета утилит: import com.example.navalcombat.utils.dpToPx
+// (Убедитесь, что пакет соответствует вашему)
