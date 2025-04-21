@@ -557,6 +557,7 @@ class SetupActivity : AppCompatActivity() {
                             ContextCompat.getColor(context, android.R.color.holo_blue_dark)
                         } else {
                             Color.BLACK
+                            ContextCompat.getColor(context, android.R.color.white)
                         }
                     )
 

@@ -22,137 +22,151 @@
         android:layout_marginBottom="8dp"
         tools:text="Ваш ход"/>
 
+    <!-- Контейнер для кнопок Game Over (теперь виден с начала и вертикальный) -->
+
+
     <!-- Контейнер для поля ПРОТИВНИКА с метками и сеткой -->
+    <!-- Обратите внимание, что эти блоки теперь находятся НИЖЕ блока кнопок -->
+
+    <!-- Контейнер для поля ИГРОКА с метками и сеткой -->
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/opponentBoardContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-    android:layout_weight="1"
-    android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="20dp"
-    android:visibility="visible"
-    >
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1"
+        android:visibility="visible"
+        tools:visibility="gone">
 
-    <!-- GridLayout для поля противника (сетка 10x10) -->
-    <androidx.gridlayout.widget.GridLayout
-        android:id="@+id/opponentGrid"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="1:1"
-    app:layout_constraintVertical_bias="0.5"
-    app:layout_constraintHorizontal_bias="0.5"
-    android:layout_marginTop="24dp"
-    android:layout_marginStart="24dp"
-    app:columnCount="10"
-    app:rowCount="10">
-</androidx.gridlayout.widget.GridLayout>
+        <!-- GridLayout для поля противника (сетка 10x10) -->
 
-    <!-- LinearLayout для меток столбцов (А-К) -->
-<LinearLayout
-android:id="@+id/opponentColLabels"
-android:layout_width="0dp"
-android:layout_height="wrap_content"
-android:orientation="horizontal"
-app:layout_constraintBottom_toTopOf="@+id/opponentGrid"
-app:layout_constraintStart_toStartOf="@+id/opponentGrid"
-app:layout_constraintEnd_toEndOf="@+id/opponentGrid"/>
+        <!-- LinearLayout для меток столбцов (А-К) -->
 
-    <!-- LinearLayout для меток строк (1-10) -->
-<LinearLayout
-android:id="@+id/opponentRowLabels"
-android:layout_width="wrap_content"
-android:layout_height="0dp"
-android:orientation="vertical"
-app:layout_constraintTop_toTopOf="@+id/opponentGrid"
-app:layout_constraintBottom_toBottomOf="@+id/opponentGrid"
-app:layout_constraintStart_toStartOf="parent"
-app:layout_constraintEnd_toStartOf="@+id/opponentGrid"
-android:layout_marginEnd="4dp"/>
+        <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/opponentGrid"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            app:columnCount="10"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rowCount="10">
+        </androidx.gridlayout.widget.GridLayout>
+
+        <LinearLayout
+            android:id="@+id/opponentColLabels"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/opponentGrid"
+            app:layout_constraintEnd_toEndOf="@+id/opponentGrid"
+            app:layout_constraintStart_toStartOf="@+id/opponentGrid" />
+
+        <!-- LinearLayout для меток строк (1-10) -->
+        <LinearLayout
+            android:id="@+id/opponentRowLabels"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="4dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@+id/opponentGrid"
+            app:layout_constraintEnd_toStartOf="@+id/opponentGrid"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/opponentGrid" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Контейнер для поля ИГРОКА с метками и сеткой -->
-<androidx.constraintlayout.widget.ConstraintLayout
-android:id="@+id/playerBoardContainer"
-android:layout_width="match_parent"
-android:layout_height="0dp"
-android:layout_weight="1"
-android:layout_marginStart="8dp"
-android:layout_marginEnd="8dp"
-android:layout_marginTop="8dp"
-android:layout_marginBottom="8dp"
-android:visibility="gone"> <!-- По умолчанию скрыто -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/playerBoardContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="1"
+        android:visibility="gone"
+        tools:visibility="visible"> <!-- По умолчанию скрыто -->
 
-<!-- GridLayout для поля игрока (сетка 10x10) -->
-<androidx.gridlayout.widget.GridLayout
-    android:id="@+id/playerGrid"
-    android:layout_width="0dp"
-    android:layout_height="0dp"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintDimensionRatio="1:1"
-    app:layout_constraintVertical_bias="0.5"
-    app:layout_constraintHorizontal_bias="0.5"
-    android:layout_marginTop="24dp"
-    android:layout_marginStart="24dp"
-    app:columnCount="10"
-    app:rowCount="10">
-</androidx.gridlayout.widget.GridLayout>
+        <!-- GridLayout для поля игрока (сетка 10x10) -->
+        <androidx.gridlayout.widget.GridLayout
+            android:id="@+id/playerGrid"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            app:columnCount="10"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rowCount="10">
+        </androidx.gridlayout.widget.GridLayout>
 
-<!-- LinearLayout для меток столбцов (А-К) -->
-<LinearLayout
-    android:id="@+id/playerColLabels"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    app:layout_constraintBottom_toTopOf="@+id/playerGrid"
-    app:layout_constraintStart_toStartOf="@+id/playerGrid"
-    app:layout_constraintEnd_toEndOf="@+id/playerGrid"/>
+        <!-- LinearLayout для меток столбцов (А-К) -->
+        <LinearLayout
+            android:id="@+id/playerColLabels"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/playerGrid"
+            app:layout_constraintEnd_toEndOf="@+id/playerGrid"
+            app:layout_constraintStart_toStartOf="@+id/playerGrid" />
 
-<!-- LinearLayout для меток строк (1-10) -->
-<LinearLayout
-    android:id="@+id/playerRowLabels"
-    android:layout_width="wrap_content"
-    android:layout_height="0dp"
-    android:orientation="vertical"
-    app:layout_constraintTop_toTopOf="@+id/playerGrid"
-    app:layout_constraintBottom_toBottomOf="@+id/playerGrid"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toStartOf="@+id/playerGrid"
-    android:layout_marginEnd="4dp"/>
+        <!-- LinearLayout для меток строк (1-10) -->
+        <LinearLayout
+            android:id="@+id/playerRowLabels"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginEnd="4dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@+id/playerGrid"
+            app:layout_constraintEnd_toStartOf="@+id/playerGrid"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/playerGrid" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <LinearLayout
+        android:id="@+id/gameOverButtonContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:layout_marginBottom="50dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/opponentRowLabels"
+        app:layout_constraintTop_toBottomOf="@+id/opponentGrid"
+        app:layout_constraintVertical_bias="0.14">  <!-- Изменено на visible -->
 
-    <!-- Контейнер для кнопок управления (только Начать бой, скрыта во время игры) -->
-    <!-- Убираем кнопку Назад из этого контейнера -->
-<LinearLayout
-android:id="@+id/gameButtonContainer"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:orientation="horizontal"
-android:gravity="center_horizontal"
-android:layout_marginTop="16dp">
+        <!-- Добавляем отступ ПОД первой кнопкой -->
 
-<!-- Кнопка "Начать Бой" (обычно неактивна во время игры) -->
-<Button
-    android:id="@+id/buttonStartBattle"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Начать Бой"
-    android:visibility="gone"
-android:enabled="false" />
+        <Button
+            android:id="@+id/buttonPlayAgain"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Начать заново" />
 
+        <Button
+            android:id="@+id/buttonToMenu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="В меню" />
+    </LinearLayout>
 
 </LinearLayout>
-
-
-    </LinearLayout>

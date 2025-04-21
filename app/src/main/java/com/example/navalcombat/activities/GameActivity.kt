@@ -38,6 +38,11 @@ import java.io.Serializable
 import java.util.Stack
 import kotlin.random.Random
 
+// Убедитесь, что эти импорты верны для вашего проекта
+import com.example.navalcombat.activities.SetupActivity // Предполагаем, что SetupActivity в этом пакете
+import com.example.navalcombat.activities.MainActivity // Предполагаем, что MainActivity в этом пакете
+
+
 class GameActivity : AppCompatActivity() {
 
     // --- UI элементы из activity_game.xml ---
@@ -50,8 +55,13 @@ class GameActivity : AppCompatActivity() {
     private lateinit var opponentRowLabelsLayout: LinearLayout
     private lateinit var playerColLabelsLayout: LinearLayout
     private lateinit var playerRowLabelsLayout: LinearLayout
-    private lateinit var buttonStartBattle: Button // Кнопка Начать бой (найдена, но не используется в процессе игры)
-    // --- Конец UI элементов ---
+    // private lateinit var buttonStartBattle: Button // Кнопка Начать бой (теперь не находим ее, т.к. удалена из XML)
+
+    // --- ДОБАВЛЕНО: Кнопки и контейнер для Game Over ---
+    private lateinit var gameOverButtonContainer: LinearLayout
+    private lateinit var buttonPlayAgain: Button
+    private lateinit var buttonToMenu: Button
+    // --- КОНЕЦ ДОБАВЛЕНО ---
 
     // --- Логическая модель данных и состояние игры ---
     private lateinit var opponentCellViews: Array<Array<TextView?>>
@@ -91,8 +101,36 @@ class GameActivity : AppCompatActivity() {
         opponentRowLabelsLayout = findViewById(R.id.opponentRowLabels)
         playerColLabelsLayout = findViewById(R.id.playerColLabels)
         playerRowLabelsLayout = findViewById(R.id.playerRowLabels)
-        buttonStartBattle = findViewById(R.id.buttonStartBattle)
-        // --- Конец findViewById ---
+        // buttonStartBattle = findViewById(R.id.buttonStartBattle) // Эту кнопку удалили из XML
+
+        // --- ДОБАВЛЕНО: Находим новые кнопки и контейнер ---
+        gameOverButtonContainer = findViewById(R.id.gameOverButtonContainer)
+        buttonPlayAgain = findViewById(R.id.buttonPlayAgain)
+        buttonToMenu = findViewById(R.id.buttonToMenu)
+        // --- КОНЕЦ ДОБАВЛЕНО ---
+
+        // --- ДОБАВЛЕНО: Устанавливаем слушатели кликов для новых кнопок ---
+        buttonPlayAgain.setOnClickListener {
+            Log.d("GameActivity", "Play Again button clicked. Restarting SetupActivity.")
+            // Создаем Intent для запуска SetupActivity
+            val intent = Intent(this, SetupActivity::class.java)
+            // Очищаем стек активностей, чтобы пользователь не мог вернуться в законченную игру
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish() // Завершаем текущую GameActivity
+        }
+
+        buttonToMenu.setOnClickListener {
+            Log.d("GameActivity", "To Menu button clicked. Going back to MainActivity.")
+            // Создаем Intent для запуска MainActivity
+            val intent = Intent(this, MainActivity::class.java)
+            // Очищаем стек активностей
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            finish() // Завершаем текущую GameActivity
+        }
+        // --- КОНЕЦ ДОБАВЛЕНО ---
+
 
         val rootLayout = findViewById<LinearLayout>(R.id.rootLayoutGame)
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
@@ -168,6 +206,9 @@ class GameActivity : AppCompatActivity() {
 
         isPlayerTurn = true // Игрок всегда начинает
         isGameOver = false
+
+        // УДАЛЕНО: Больше не нужно скрывать кнопки при старте игры, т.к. они всегда видны в XML
+        // gameOverButtonContainer.visibility = View.GONE // <-- УДАЛЕНО
 
         Log.d("GameActivity", "setupGame: Finished.")
     }
@@ -581,7 +622,8 @@ class GameActivity : AppCompatActivity() {
 
     // Создает и добавляет TextView для меток координат (А-К и 1-10)
     private fun createLabels() {
-        val labelColor = ContextCompat.getColor(this, R.color.purple_700)
+        // Используем белый цвет для меток, чтобы было видно на темной теме
+        val labelColor = ContextCompat.getColor(this, R.color.purple_700) // <-- Изменено
         val labelTextSize = 14f
 
         opponentColLabelsLayout.removeAllViews()
@@ -607,7 +649,7 @@ class GameActivity : AppCompatActivity() {
                 textSize = labelTextSize
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setTextColor(labelColor)
+                setTextColor(labelColor) // Используем белый цвет
             }
             opponentColLabelsLayout.addView(opponentColLabel) // Добавляем в Layout меток столбцов противника
             playerColLabelsLayout.addView(playerColLabel) // Добавляем в Layout меток столбцов игрока
@@ -621,7 +663,7 @@ class GameActivity : AppCompatActivity() {
                 textSize = labelTextSize
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setTextColor(labelColor)
+                setTextColor(labelColor) // Используем белый цвет
             }
             val playerRowLabel = TextView(this).apply { // TextView для поля игрока
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, 0, 1f).apply { gravity = Gravity.CENTER_VERTICAL }
@@ -629,7 +671,7 @@ class GameActivity : AppCompatActivity() {
                 textSize = labelTextSize
                 typeface = Typeface.DEFAULT_BOLD
                 gravity = Gravity.CENTER
-                setTextColor(labelColor)
+                setTextColor(labelColor) // Используем белый цвет
             }
             opponentRowLabelsLayout.addView(opponentRowLabel) // Добавляем в Layout меток строк противника
             playerRowLabelsLayout.addView(playerRowLabel) // Добавляем в Layout меток строк игрока
@@ -638,6 +680,7 @@ class GameActivity : AppCompatActivity() {
 
     // Переключает видимость между полем противника и полем игрока
     private fun showBoard(showOpponent: Boolean) {
+        showGameOverButtons()
         Log.d("GameActivity", "showBoard: Switching board to " + if(showOpponent) "Opponent" else "Player")
         if (showOpponent) {
             opponentBoardContainer.visibility = View.VISIBLE
@@ -700,6 +743,7 @@ class GameActivity : AppCompatActivity() {
                     } else {
                         // Игра окончена, checkGameOver обработал статус победы и запустил сохранение
                         Log.d("GameActivity", "handlePlayerShot: Game is over after player's move.")
+                        // Кнопки Game Over уже показаны в checkGameOver
                     }
 
                 } else {
@@ -800,7 +844,7 @@ class GameActivity : AppCompatActivity() {
                     } else {
                         Log.d("GameActivity", "computerTurn: Game is over after computer's move.")
                         // Игра окончена, остаемся на поле игрока с итоговым статусом
-                        // checkGameOver уже установил текст статуса и запустил сохранение
+                        // checkGameOver уже установил текст статуса, запустил сохранение и показал кнопки
                     }
 
                 } else {
@@ -845,13 +889,13 @@ class GameActivity : AppCompatActivity() {
             isGameOver = true
             Log.d("GameActivity", "checkGameOver: Player WINS!")
             saveGameResult(winnerIsPlayer = true) // <-- Сохраняем результат игры
-            // TODO: Возможно, показать диалог о победе и предложить новую игру/вернуться в меню
+            //showGameOverButtons() // <-- Показываем кнопки (теперь просто убеждается, что они видны)
         } else if (allPlayerShipsSunk) {
             statusTextView.text = "К сожалению, вы проиграли. Компьютер победил!"
             isGameOver = true
             Log.d("GameActivity", "checkGameOver: Computer WINS!")
             saveGameResult(winnerIsPlayer = false) // <-- Сохраняем результат игры
-            // TODO: Возможно, показать диалог о поражении и предложить новую игру/вернуться в меню
+            //showGameOverButtons() // <-- Показываем кнопки (теперь просто убеждается, что они видны)
         }
         // Если игра окончена, поле остается на том, на котором оно было в момент окончания.
         // updateStatusText() не вызывается, чтобы оставить итоговый статус.
@@ -859,6 +903,18 @@ class GameActivity : AppCompatActivity() {
             Log.d("GameActivity", "checkGameOver: Game is over.")
         }
     }
+
+    // --- Метод для показа кнопок Game Over ---
+    // Этот метод теперь просто убеждается, что кнопки видимы,
+    // так как по умолчанию они уже visible в XML.
+    private fun showGameOverButtons() {
+        Log.d("GameActivity", "showGameOverButtons: Ensuring game over buttons are visible.")
+        gameOverButtonContainer.visibility = View.VISIBLE
+        // Можно дополнительно отключить клики по игровым полям, если необходимо:
+        // opponentGridView.isClickable = false
+        // playerGridView.isClickable = false
+    }
+    // --- КОНЕЦ ДОБАВЛЕНО ---
 
     // --- Метод для сохранения результата игры в Room Database ---
     private fun saveGameResult(winnerIsPlayer: Boolean) {
@@ -894,15 +950,4 @@ class GameActivity : AppCompatActivity() {
         statusTextView.text = if (isPlayerTurn) "Ваш ход" else "Ход компьютера..."
         Log.d("GameActivity", "updateStatusText: Status set to '${statusTextView.text}'")
     }
-
 }
-
-// TODO: Если используются расширения dpToPx, убедитесь, что они объявлены в отдельном файле или здесь вне класса
-// import android.content.res.Resources // Импорт, если dpToPx здесь
-/*
-fun Int.dpToPx(resources: Resources): Int {
-    return (this * resources.displayMetrics.density).toInt()
-}
-*/
-// Или из пакета утилит: import com.example.navalcombat.utils.dpToPx
-// (Убедитесь, что пакет соответствует вашему)
