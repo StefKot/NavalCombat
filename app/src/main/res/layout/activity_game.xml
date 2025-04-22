@@ -11,7 +11,6 @@
     android:padding="8dp"
     tools:context=".activities.GameActivity">
 
-    <!-- Статус игры -->
     <TextView
         android:id="@+id/textViewGameStatus"
         android:layout_width="wrap_content"
@@ -21,14 +20,6 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
         tools:text="Ваш ход"/>
-
-    <!-- Контейнер для кнопок Game Over (теперь виден с начала и вертикальный) -->
-
-
-    <!-- Контейнер для поля ПРОТИВНИКА с метками и сеткой -->
-    <!-- Обратите внимание, что эти блоки теперь находятся НИЖЕ блока кнопок -->
-
-    <!-- Контейнер для поля ИГРОКА с метками и сеткой -->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/opponentBoardContainer"
@@ -41,10 +32,6 @@
         android:layout_weight="1"
         android:visibility="visible"
         tools:visibility="gone">
-
-        <!-- GridLayout для поля противника (сетка 10x10) -->
-
-        <!-- LinearLayout для меток столбцов (А-К) -->
 
         <androidx.gridlayout.widget.GridLayout
             android:id="@+id/opponentGrid"
@@ -71,7 +58,6 @@
             app:layout_constraintEnd_toEndOf="@+id/opponentGrid"
             app:layout_constraintStart_toStartOf="@+id/opponentGrid" />
 
-        <!-- LinearLayout для меток строк (1-10) -->
         <LinearLayout
             android:id="@+id/opponentRowLabels"
             android:layout_width="wrap_content"
@@ -95,9 +81,8 @@
         android:layout_marginBottom="8dp"
         android:layout_weight="1"
         android:visibility="gone"
-        tools:visibility="visible"> <!-- По умолчанию скрыто -->
+        tools:visibility="visible">
 
-        <!-- GridLayout для поля игрока (сетка 10x10) -->
         <androidx.gridlayout.widget.GridLayout
             android:id="@+id/playerGrid"
             android:layout_width="0dp"
@@ -114,7 +99,6 @@
             app:rowCount="10">
         </androidx.gridlayout.widget.GridLayout>
 
-        <!-- LinearLayout для меток столбцов (А-К) -->
         <LinearLayout
             android:id="@+id/playerColLabels"
             android:layout_width="0dp"
@@ -124,7 +108,6 @@
             app:layout_constraintEnd_toEndOf="@+id/playerGrid"
             app:layout_constraintStart_toStartOf="@+id/playerGrid" />
 
-        <!-- LinearLayout для меток строк (1-10) -->
         <LinearLayout
             android:id="@+id/playerRowLabels"
             android:layout_width="wrap_content"
@@ -151,9 +134,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/opponentRowLabels"
         app:layout_constraintTop_toBottomOf="@+id/opponentGrid"
-        app:layout_constraintVertical_bias="0.14">  <!-- Изменено на visible -->
-
-        <!-- Добавляем отступ ПОД первой кнопкой -->
+        app:layout_constraintVertical_bias="0.14">
 
         <Button
             android:id="@+id/buttonPlayAgain"

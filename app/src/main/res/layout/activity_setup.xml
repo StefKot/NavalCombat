@@ -9,7 +9,6 @@
     android:padding="8dp"
     tools:context=".activities.SetupActivity">
 
-    <!-- Заголовок экрана расстановки -->
     <TextView
         android:id="@+id/textViewSetupTitle"
         android:layout_width="wrap_content"
@@ -22,7 +21,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Статус или инструкция -->
     <TextView
         android:id="@+id/textViewGameStatus"
         android:layout_width="wrap_content"
@@ -34,7 +32,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="Выберите корабль снизу"/>
 
-    <!-- Контейнер для поля ИГРОКА с метками и сеткой -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/playerBoardContainerSetup"
         android:layout_width="0dp"
@@ -48,7 +45,6 @@
         app:layout_constraintBottom_toTopOf="@+id/textViewShipsToPlace"
         >
 
-        <!-- GridLayout для поля игрока (сетка 10x10) -->
         <androidx.gridlayout.widget.GridLayout
             android:id="@+id/playerGridSetup"
             android:layout_width="0dp"
@@ -64,7 +60,6 @@
             app:rowCount="10">
         </androidx.gridlayout.widget.GridLayout>
 
-        <!-- LinearLayout для меток столбцов (А-К) -->
         <LinearLayout
             android:id="@+id/playerColLabelsSetup"
             android:layout_width="0dp"
@@ -74,7 +69,6 @@
             app:layout_constraintStart_toStartOf="@+id/playerGridSetup"
             app:layout_constraintEnd_toEndOf="@+id/playerGridSetup"/>
 
-        <!-- LinearLayout для меток строк (1-10) -->
         <LinearLayout
             android:id="@+id/playerRowLabelsSetup"
             android:layout_width="wrap_content"
@@ -88,7 +82,6 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- Заголовок для списка кораблей, которые осталось расставить -->
     <TextView
         android:id="@+id/textViewShipsToPlace"
         android:layout_width="wrap_content"
@@ -99,7 +92,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- LinearLayout для отображения списка кораблей (TextView) -->
     <LinearLayout
         android:id="@+id/layoutShipsList"
         android:layout_width="match_parent"
@@ -113,7 +105,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Индикатор выбранного корабля -->
     <TextView
         android:id="@+id/textViewSelectedShipInfo"
         android:layout_width="wrap_content"
@@ -128,8 +119,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-
-    <!-- Контейнер для основных кнопок управления расстановкой -->
     <LinearLayout
         android:id="@+id/buttonContainer"
         android:layout_width="wrap_content"
@@ -141,14 +130,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Кнопка "Повернуть" -->
         <Button
             android:id="@+id/buttonRotateShip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Повернуть"/>
 
-        <!-- Кнопка "Случайно" -->
         <Button
             android:id="@+id/buttonRandomPlace"
             android:layout_width="wrap_content"
@@ -156,7 +143,6 @@
             android:text="Случайно"
             android:layout_marginStart="16dp"/>
 
-        <!-- Кнопка "Сброс" -->
         <Button
             android:id="@+id/buttonClearBoard"
             android:layout_width="wrap_content"
@@ -166,7 +152,6 @@
 
     </LinearLayout>
 
-    <!-- НОВАЯ КНОПКА: Отменить последнее (вне buttonContainer) -->
     <Button
         android:id="@+id/buttonUndoPlacement"
         android:layout_width="wrap_content"
@@ -178,10 +163,8 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     />
-    <!-- Конец НОВОЙ КНОПКИ -->
 
 
-    <!-- Кнопка "Начать Бой" -->
     <Button
         android:id="@+id/buttonStartBattle"
         android:layout_width="wrap_content"

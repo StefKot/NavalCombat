@@ -6,9 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    tools:context=".activities.MainActivity"> <!-- Укажите правильный путь к вашей MainActivity -->
+    tools:context=".activities.MainActivity">
 
-    <!-- Заголовок приложения -->
     <TextView
         android:id="@+id/textViewTitle"
         android:layout_width="wrap_content"
@@ -21,7 +20,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Статистика - Макс. серия побед -->
     <TextView
         android:id="@+id/textViewWinStreak"
         android:layout_width="wrap_content"
@@ -31,13 +29,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="8dp"
-        tools:text="Максимальная серия побед: 5"/> <!-- tools:text для предпросмотра -->
+        tools:text="Максимальная серия побед: 5"/>
 
-    <!-- Кнопка Новая Игра -->
-
-    <!-- Заголовок Истории -->
-
-    <!-- Список Истории -->
     <Button
         android:id="@+id/buttonNewGame"
         android:layout_width="wrap_content"
@@ -65,10 +58,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textViewWinStreak" />
 
-    <!-- Укажите имя вашего макета элемента списка -->
-
-    <!-- Сообщение, если история пуста -->
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewHistory"
         android:layout_width="0dp"
@@ -93,6 +82,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/textViewHistoryTitle"
         app:layout_constraintTop_toBottomOf="@+id/textViewWinStreak"
-        tools:visibility="visible" /> <!-- tools:visibility для предпросмотра -->
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

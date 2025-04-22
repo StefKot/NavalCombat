@@ -10,4 +10,4 @@
     android:textStyle="bold"
     android:textColor="@android:color/black"
     tools:text="X"
-    tools:background="@drawable/cell_water"/> <!-- Только для предпросмотра -->
+    tools:background="@drawable/cell_water"/>

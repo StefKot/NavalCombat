@@ -1,4 +1,4 @@
-package com.example.navalcombat.activities // Убедитесь, что пакет соответствует вашему проекту
+package com.example.navalcombat.activities
 
 import android.content.Context
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.util.Log // Импортируем Log для отладки
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -21,10 +21,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.updatePadding
 import androidx.gridlayout.widget.GridLayout
-import com.example.navalcombat.R // Убедитесь, что пакет соответствует вашему проекту
-import com.example.navalcombat.model.CellState // Импортируем из game.model
-import com.example.navalcombat.model.ShipToPlace // Импортируем из game.model
-// import com.example.navalcombat.utils.dpToPx // Если создавали utils пакет, импортируйте оттуда
+import com.example.navalcombat.R
+import com.example.navalcombat.model.CellState
+import com.example.navalcombat.model.ShipToPlace
 import java.io.Serializable
 import kotlin.random.Random
 
@@ -35,7 +34,6 @@ fun Int.dpToPx(resources: Resources): Int {
 
 class SetupActivity : AppCompatActivity() {
 
-    // --- UI элементы из activity_setup.xml ---
     private lateinit var playerGridView: GridLayout
     private lateinit var playerColLabelsLayout: LinearLayout
     private lateinit var playerRowLabelsLayout: LinearLayout
@@ -47,11 +45,9 @@ class SetupActivity : AppCompatActivity() {
     private lateinit var textViewSetupTitle: TextView
     private lateinit var textViewGameStatus: TextView
     private lateinit var textViewShipsToPlace: TextView
-    private lateinit var textViewSelectedShipInfo: TextView // Индикатор выбранного корабля
-    // --- Конец UI элементов ---
+    private lateinit var textViewSelectedShipInfo: TextView
 
-    // --- Логическая модель данных и состояние расстановки ---
-    private lateinit var playerCellViews: Array<Array<TextView?>> // <-- Инициализируется ТОЛЬКО в onCreate
+    private lateinit var playerCellViews: Array<Array<TextView?>>
 
     private var playerBoard = createEmptyBoard()
 
@@ -59,12 +55,9 @@ class SetupActivity : AppCompatActivity() {
 
     private var selectedShip: ShipToPlace? = null
 
-    private val gridSize = 10 // <-- Значение должно быть 10
+    private val gridSize = 10
 
     private val columnLabels = arrayOf("А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "К")
-
-    // --- Конец логической модели и состояния ---
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,7 +68,6 @@ class SetupActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_setup)
 
-        // --- Находим UI элементы по их ID ---
         playerGridView = findViewById(R.id.playerGridSetup)
         playerColLabelsLayout = findViewById(R.id.playerColLabelsSetup)
         playerRowLabelsLayout = findViewById(R.id.playerRowLabelsSetup)
@@ -87,9 +79,8 @@ class SetupActivity : AppCompatActivity() {
         textViewSetupTitle = findViewById(R.id.textViewSetupTitle)
         textViewGameStatus = findViewById(R.id.textViewGameStatus)
         textViewShipsToPlace = findViewById(R.id.textViewShipsToPlace)
-        textViewSelectedShipInfo = findViewById(R.id.textViewSelectedShipInfo) // Находим индикатор
+        textViewSelectedShipInfo = findViewById(R.id.textViewSelectedShipInfo)
         Log.d("SetupActivity", "onCreate: Buttons found: Rotate=${buttonRotateShip!=null}, Random=${buttonRandomPlace!=null}, Clear=${buttonClearBoard!=null}")
-        // --- Конец findViewById ---
 
         val rootLayout = findViewById<ConstraintLayout>(R.id.rootLayoutSetup)
         ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { view, insets ->
@@ -101,34 +92,28 @@ class SetupActivity : AppCompatActivity() {
             insets
         }
 
-        // --- ВАЖНО: Инициализация массива View ячеек ТОЛЬКО ЗДЕСЬ ---
         Log.d("SetupActivity", "onCreate: Initializing playerCellViews array with size $gridSize")
         playerCellViews = Array(gridSize) { arrayOfNulls<TextView>(gridSize) } // <-- Правильное место
         Log.d("SetupActivity", "onCreate: playerCellViews array initialized.")
-        // --- Конец инициализации ---
-
 
         playerGridView.rowCount = gridSize
         playerGridView.columnCount = gridSize
 
-        createLabels() // Создает метки
+        createLabels()
         Log.d("SetupActivity", "onCreate: Labels created.")
 
-        createGridCells() // <-- Вызывается здесь ОДИН РАЗ для создания View ячеек
+        createGridCells()
         Log.d("SetupActivity", "onCreate: Grid cells created.")
 
-        setupNewPlacement() // <-- Вызывается здесь для начала процесса расстановки (сбрасывает логику и вызывает updateUI)
+        setupNewPlacement()
         Log.d("SetupActivity", "onCreate: Setup new placement initiated.")
 
-
-        // --- Устанавливаем слушатели для кнопок ---
         buttonRotateShip.setOnClickListener {
             Log.d("SetupActivity", "Rotate button clicked")
             selectedShip?.let { ship ->
-                ship.isHorizontal = !ship.isHorizontal // Меняем ориентацию
-                updateSelectedShipInfoUI() // Обновляем индикатор выбранного корабля
+                ship.isHorizontal = !ship.isHorizontal
+                updateSelectedShipInfoUI()
                 Toast.makeText(this, "Выбранный корабль (${ship.size}) повернут.", Toast.LENGTH_SHORT).show()
-                // TODO: При наведении на поле, показать повернутое превью
             } ?: run {
                 Toast.makeText(this, "Сначала выберите корабль для поворота", Toast.LENGTH_SHORT).show()
             }
@@ -155,34 +140,27 @@ class SetupActivity : AppCompatActivity() {
             }
         }
         Log.d("SetupActivity", "onCreate: Button listeners set.")
-        // --- Конец слушателей кнопок ---
 
         Log.d("SetupActivity", "onCreate: Finished.")
     }
 
-    // --- Методы для логики расстановки ---
-
-    // Начинает процесс новой ручной расстановки
     private fun setupNewPlacement() {
         Log.d("SetupActivity", "setupNewPlacement: Starting.")
-        clearBoard() // clearBoard вызывает updateGridCells и updateShipsListUI
+        clearBoard()
         textViewGameStatus.text = "Выберите корабль снизу и кликните на поле"
-        updateSelectedShipInfoUI() // Скрываем индикатор выбранного корабля в начале
+        updateSelectedShipInfoUI()
         Log.d("SetupActivity", "setupNewPlacement: Finished.")
     }
 
-
-    // Создает пустую доску gridSize x gridSize, заполненную CellState.EMPTY
     private fun createEmptyBoard(): Array<Array<CellState>> {
         return Array(gridSize) { Array(gridSize) { CellState.EMPTY } }
     }
 
-    // Очищает логическую доску игрока и сбрасывает список кораблей на изначальный
     private fun clearBoard() {
         Log.d("SetupActivity", "clearBoard: Starting.")
         playerBoard = createEmptyBoard()
         shipsToPlace.clear()
-        shipsToPlace.addAll( // Добавляем полный набор кораблей
+        shipsToPlace.addAll(
             listOf(
                 ShipToPlace(4),
                 ShipToPlace(3), ShipToPlace(3),
@@ -193,23 +171,22 @@ class SetupActivity : AppCompatActivity() {
         selectedShip = null
 
         Log.d("SetupActivity", "clearBoard: Before updateGridCells.")
-        updateGridCells() // <-- Вызываем обновление UI поля после очистки логической доски
+        updateGridCells()
         Log.d("SetupActivity", "clearBoard: After updateGridCells.")
 
         Log.d("SetupActivity", "clearBoard: Before updateShipsListUI.")
-        updateShipsListUI() // Обновляем UI списка кораблей (здесь он будет заполнен)
+        updateShipsListUI()
         Log.d("SetupActivity", "clearBoard: After updateShipsListUI.")
 
-        buttonStartBattle.isEnabled = false // Кнопка "Начать Бой" снова неактивна
-        textViewGameStatus.text = "Выберите корабль снизу и кликните на поле" // Сбрасываем статус/инструкцию
-        updateSelectedShipInfoUI() // Скрываем индикатор
+        buttonStartBattle.isEnabled = false
+        textViewGameStatus.text = "Выберите корабль снизу и кликните на поле"
+        updateSelectedShipInfoUI()
         Log.d("SetupActivity", "clearBoard: Finished.")
     }
 
-    // Выполняет случайную расстановку всех кораблей на доске игрока
     private fun setupRandomly() {
         Log.d("SetupActivity", "setupRandomly: Starting.")
-        clearBoard() // Начинаем с чистого поля (сбрасывает доску и список кораблей, вызывает updateGridCells)
+        clearBoard()
 
         val random = Random(System.currentTimeMillis())
 
@@ -243,20 +220,20 @@ class SetupActivity : AppCompatActivity() {
             }
         }
 
-        shipsToPlace.clear() // После случайной расстановки список оставшихся пуст
-        selectedShip = null // Сбрасываем выбранный корабль
+        shipsToPlace.clear()
+        selectedShip = null
 
         Log.d("SetupActivity", "setupRandomly: Before updateGridCells.")
-        updateGridCells() // <-- Вызываем обновление UI поля после случайной расстановки логической доски
+        updateGridCells()
         Log.d("SetupActivity", "setupRandomly: After updateGridCells.")
 
         Log.d("SetupActivity", "setupRandomly: Before updateShipsListUI.")
-        updateShipsListUI() // Обновляем UI списка кораблей (он станет пустым)
+        updateShipsListUI()
         Log.d("SetupActivity", "setupRandomly: After updateShipsListUI.")
 
         buttonStartBattle.isEnabled = true
         textViewGameStatus.text = "Корабли расставлены случайно! Готов к бою!"
-        updateSelectedShipInfoUI() // Скрываем индикатор
+        updateSelectedShipInfoUI()
         Log.d("SetupActivity", "setupRandomly: Finished.")
     }
 
@@ -298,12 +275,10 @@ class SetupActivity : AppCompatActivity() {
                 Log.d("SetupActivity", "tryPlaceSelectedShip: Placement is valid.")
                 placeShip(playerBoard, row, col, ship.size, ship.isHorizontal)
 
-                // --- ИСПРАВЛЕНО: Удаление только ОДНОГО корабля из списка ---
-                // Находим первый корабль в списке shipsToPlace с таким же размером
                 val shipToRemove = shipsToPlace.find { it.size == ship.size }
 
                 if (shipToRemove != null) {
-                    val removed = shipsToPlace.remove(shipToRemove) // Удаляем найденный корабль
+                    val removed = shipsToPlace.remove(shipToRemove)
                     if (removed) {
                         Log.d("SetupActivity", "tryPlaceSelectedShip: Ship removed from list.")
                     } else {
@@ -313,23 +288,19 @@ class SetupActivity : AppCompatActivity() {
                 } else {
                     Log.e("SetupActivity", "tryPlaceSelectedShip: FATAL ERROR: Selected ship ${ship.size} not found in shipsToPlace list!")
                     Toast.makeText(this, "Критическая ошибка расстановки!", Toast.LENGTH_LONG).show()
-                    // Можно даже выбросить исключение, чтобы понять, почему это происходит
-                    // throw IllegalStateException("Selected ship not found in list after canPlaceShip succeeded")
                 }
-                // --- Конец исправления удаления ---
 
-
-                selectedShip = null // Сбрасываем выбранный корабль после успешной расстановки
+                selectedShip = null
 
                 Log.d("SetupActivity", "tryPlaceSelectedShip: Before updateGridCells.")
-                updateGridCells() // <-- Вызываем обновление UI поля после размещения логической доски
+                updateGridCells()
                 Log.d("SetupActivity", "tryPlaceSelectedShip: After updateGridCells.")
 
                 Log.d("SetupActivity", "tryPlaceSelectedShip: Before updateShipsListUI.")
-                updateShipsListUI() // Обновляем UI списка оставшихся кораблей
+                updateShipsListUI()
                 Log.d("SetupActivity", "tryPlaceSelectedShip: After updateShipsListUI.")
 
-                updateSelectedShipInfoUI() // Скрываем индикатор (т.к. корабль расставлен)
+                updateSelectedShipInfoUI()
 
                 if (shipsToPlace.isEmpty()) {
                     buttonStartBattle.isEnabled = true
@@ -337,7 +308,7 @@ class SetupActivity : AppCompatActivity() {
                     Toast.makeText(this, "Все корабли расставлены! Нажмите 'Начать Бой'.", Toast.LENGTH_LONG).show()
                     Log.d("SetupActivity", "tryPlaceSelectedShip: All ships placed.")
                 } else {
-                    textViewGameStatus.text = "Поставлен ${ship.size}-палубный корабль. Осталось: ${shipsToPlace.size} кораблей всего" // Уточним текст
+                    textViewGameStatus.text = "Поставлен ${ship.size}-палубный корабль. Осталось: ${shipsToPlace.size} кораблей всего"
                     Log.d("SetupActivity", "tryPlaceSelectedShip: Ship placed. ${shipsToPlace.size} remaining.")
                 }
 
@@ -353,15 +324,9 @@ class SetupActivity : AppCompatActivity() {
         }
     }
 
-    // --- Работа с UI ---
-
-    // Создает View ячеек для GridLayout и сохраняет их ссылки в playerCellViews.
-    // Вызывается ОДИН РАЗ в onCreate.
     private fun createGridCells() {
         Log.d("SetupActivity", "createGridCells: Starting.")
         playerGridView.removeAllViews()
-        // --- ИСПРАВЛЕНО: Удалена повторная инициализация playerCellViews из этого метода ---
-        // --- ОТЛАДКА: Проверяем playerCellViews перед заполнением ---
         Log.d("SetupActivity", "createGridCells: Before filling, playerCellViews.size = ${playerCellViews.size}")
         if (gridSize > 0 && playerCellViews.isNotEmpty() && playerCellViews[0] != null) {
             Log.d("SetupActivity", "createGridCells: Before filling, playerCellViews[0].size = ${playerCellViews[0].size}")
@@ -369,11 +334,9 @@ class SetupActivity : AppCompatActivity() {
             Log.d("SetupActivity", "createGridCells: Before filling, playerCellViews array seems empty or null. Cannot proceed with filling.")
             if (playerCellViews.isEmpty() || gridSize == 0) {
                 Log.e("SetupActivity", "FATAL ERROR: playerCellViews is empty or gridSize is 0 when createGridCells is called.")
-                // throw IllegalStateException("playerCellViews array is empty or gridSize is 0 when createGridCells is called")
-                return // Выходим, чтобы избежать краша на добавлении View
+                return
             }
         }
-        // ---
 
         for (row in 0 until gridSize) {
             for (col in 0 until gridSize) {
@@ -386,65 +349,48 @@ class SetupActivity : AppCompatActivity() {
                 params.columnSpec = GridLayout.spec(col, 1, 1f)
                 cellView.layoutParams = params
 
-                // --- ВАЖНО: Теперь мы заполняем УЖЕ СУЩЕСТВУЮЩИЙ массив playerCellViews ---
-                // Используем безопасную проверку для записи в массив (она должна быть излишней, но на всякий случай)
                 if (row < playerCellViews.size && col < (playerCellViews.getOrNull(row)?.size ?: 0)) {
-                    playerCellViews[row][col] = cellView // <-- Заполняем массив ссылкой
+                    playerCellViews[row][col] = cellView
                 } else {
                     Log.e("SetupActivity", "FATAL ERROR: Index outside bounds of playerCellViews during creation: row=$row, col=$col. Array size = ${playerCellViews.size}, inner size = ${playerCellViews.getOrNull(row)?.size}")
-                    throw IndexOutOfBoundsException("playerCellViews array size mismatch during creation") // <-- Раскомментировано для явного краша
+                    throw IndexOutOfBoundsException("playerCellViews array size mismatch during creation")
                 }
-                // --- Конец заполнения массива ---
 
-                // updateCellView(cellView, playerBoard[row][col], false) // <-- НЕ ВЫЗЫВАЕМ ЗДЕСЬ!
-                //     updateCellView должен быть вызван ИЗ updateGridCells
-
-                // Обработка клика по ячейке поля
                 cellView.setOnClickListener {
                     tryPlaceSelectedShip(row, col)
                 }
 
-                playerGridView.addView(cellView) // Добавляем View в GridLayout
+                playerGridView.addView(cellView)
             }
         }
         Log.d("SetupActivity", "createGridCells: Finished filling grid with views.")
-        // updateGridCells() // <-- НЕ ВЫЗЫВАЕМ ЗДЕСЬ!
     }
 
-    // Обновляет внешний вид ВСЕХ ячеек на поле игрока на основе текущего состояния playerBoard
-    // Вызывается после каждого изменения playerBoard (clear, place, random)
     private fun updateGridCells() {
         Log.d("SetupActivity", "updateGridCells: Starting.")
-        // --- ОТЛАДКА: Проверяем playerCellViews в updateGridCells ---
         Log.d("SetupActivity", "updateGridCells: playerCellViews.size = ${playerCellViews.size}")
-        // Проверяем, что массив проинициализирован и не пуст перед попыткой доступа
         if (playerCellViews.isEmpty() || gridSize == 0 || playerCellViews[0] == null) {
             Log.e("SetupActivity", "updateGridCells: playerCellViews is empty, gridSize is 0, or inner array is null. Skipping UI update.")
-            return // Выходим, если массив пуст или некорректен
+            return
         }
         if (playerCellViews.size != gridSize || playerCellViews[0]!!.size != gridSize) {
             Log.e("SetupActivity", "updateGridCells: playerCellViews size mismatch! Expected ${gridSize}x${gridSize}, got ${playerCellViews.size}x${playerCellViews[0]?.size}. Skipping UI update.")
-            return // Выходим, если размер массива некорректен
+            return
         }
-        // ---
 
         for (row in 0 until gridSize) {
             for (col in 0 until gridSize) {
-                // --- ВАЖНО: Теперь мы используем УЖЕ СУЩЕСТВУЮЩИЙ массив playerCellViews ---
-                // Используем безопасный доступ getOrNull
                 playerCellViews.getOrNull(row)?.getOrNull(col)?.let { cellView ->
-                    val state = playerBoard[row][col] // Состояние из логической доски
-                    updateCellView(cellView, state, false) // <-- ВЫЗЫВАЕМ updateCellView ЗДЕСЬ
+                    val state = playerBoard[row][col]
+                    updateCellView(cellView, state, false)
                 } ?: run {
                     Log.e("SetupActivity", "View ячейки отсутствует в playerCellViews по адресу: row=$row, col=$col. Skipping updateCellView.")
-                    // Это может указывать на проблему в createGridCells
                 }
             }
         }
         Log.d("SetupActivity", "updateGridCells: Finished updating UI.")
     }
 
-    // Обновляет внешний вид одной ячейки (TextView) в зависимости от ее логического состояния
     private fun updateCellView(cellView: TextView?, state: CellState, isOpponent: Boolean) {
         cellView ?: return
 
@@ -475,7 +421,6 @@ class SetupActivity : AppCompatActivity() {
         cellView.gravity = Gravity.CENTER
     }
 
-    // Создает и добавляет TextView для меток координат (А-К и 1-10) вокруг сетки
     private fun createLabels() {
         val labelColor = ContextCompat.getColor(this, R.color.purple_700)
         val labelTextSize = 14f
@@ -514,7 +459,6 @@ class SetupActivity : AppCompatActivity() {
         }
     }
 
-    // Обновляет UI список кораблей, которые осталось расставить
     private fun updateShipsListUI() {
         Log.d("SetupActivity", "updateShipsListUI: Starting.")
         layoutShipsList.removeAllViews()
@@ -566,10 +510,10 @@ class SetupActivity : AppCompatActivity() {
                         val shipToSelect = shipsToPlace.find { it.size == size }
                         if (shipToSelect != null) {
                             Log.d("SetupActivity", "updateShipsListUI: Ship $size selected.")
-                            selectedShip = shipToSelect // Устанавливаем выбранный корабль
+                            selectedShip = shipToSelect
 
-                            updateShipsListUI() // Перерисовываем список, чтобы обновить подсветку
-                            updateSelectedShipInfoUI() // Обновляем индикатор
+                            updateShipsListUI()
+                            updateSelectedShipInfoUI()
 
                             Toast.makeText(this@SetupActivity, "Выбран корабль размером ${size}", Toast.LENGTH_SHORT).show()
 
@@ -586,28 +530,22 @@ class SetupActivity : AppCompatActivity() {
         Log.d("SetupActivity", "updateShipsListUI: Finished. buttonStartBattle.isEnabled = ${buttonStartBattle.isEnabled}")
     }
 
-    // Обновляет UI индикатор выбранного корабля
     private fun updateSelectedShipInfoUI() {
         Log.d("SetupActivity", "updateSelectedShipInfoUI: Starting. selectedShip = $selectedShip")
         selectedShip?.let { ship ->
             val orientation = if (ship.isHorizontal) "Гор." else "Вер."
             textViewSelectedShipInfo.text = "Выбран: ${ship.size}-палубный (${orientation})"
-            textViewSelectedShipInfo.visibility = View.VISIBLE // Показываем индикатор
+            textViewSelectedShipInfo.visibility = View.VISIBLE
             Log.d("SetupActivity", "updateSelectedShipInfoUI: Showing info: ${textViewSelectedShipInfo.text}")
         } ?: run {
-            // Если корабль не выбран, скрываем индикатор
-            textViewSelectedShipInfo.text = "" // Очищаем текст
-            textViewSelectedShipInfo.visibility = View.INVISIBLE // Скрываем (оставляет место)
+            textViewSelectedShipInfo.text = ""
+            textViewSelectedShipInfo.visibility = View.INVISIBLE
             Log.d("SetupActivity", "updateSelectedShipInfoUI: No ship selected, hiding info.")
         }
-        // Проверка: если все корабли расставлены, индикатор тоже должен быть скрыт
         if (shipsToPlace.isEmpty() && selectedShip == null) {
             textViewSelectedShipInfo.visibility = View.INVISIBLE // Или GONE
         }
     }
-
-
-    // --- Запуск боя ---
 
     private fun startBattle() {
         Log.d("SetupActivity", "startBattle: Starting.")
@@ -618,36 +556,3 @@ class SetupActivity : AppCompatActivity() {
         Log.d("SetupActivity", "startBattle: Finished, launching GameActivity.")
     }
 }
-
-// --- Extension функция для конвертации dp в px ---
-// Эта функция ДОЛЖНА БЫТЬ ВНЕ КЛАССА SetupActivity.
-// Если у вас есть отдельный файл утилит (например, ViewUtils.kt), поместите ее туда
-// и импортируйте здесь. Если нет, поместите ее прямо здесь, над классом SetupActivity.
-/*
-import android.content.res.Resources
-
-fun Int.dpToPx(resources: Resources): Int {
-    return (this * resources.displayMetrics.density).toInt()
-}
-*/
-// Убедитесь, что импорт Resources в начале файла есть, если функция тут.
-// Если вы используете версию из utils пакета, убедитесь в правильном импорте:
-// import com.example.navalcombat.utils.dpToPx // Пример импорта из utils
-// В данном коде я предполагаю, что вы используете импорт из utils
-// Если вы используете раскомментированную версию, убедитесь, что resources доступен.
-// В этом случае удобнее сделать extension функцию для Context или View.
-// Например:
-/*
-fun View.dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
-// Тогда в updateShipsListUI вызывать так: 16.dpToPx(context) или cellView.dpToPx(16)
-*/
-// Но оставим текущий вариант с передачей resources, убедитесь, что импорт utils.dpToPx правильный.
-
-// Если вы не используете utils пакет, раскомментируйте эту версию:
-/*
-import android.content.res.Resources
-fun Int.dpToPx(resources: Resources): Int {
-    return (this * resources.displayMetrics.density).toInt()
-}
-*/
-// И убедитесь, что импорт Resources в начале файла есть.
